@@ -7,25 +7,57 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.spotify_api.screens.AlbumDetailScreen
-import com.example.spotify_api.screens.MainScreen
+import com.example.spotify_api.screens.artist.ArtistDetailScreen
+import com.example.spotify_api.screens.category.CategoryPlaylistsScreen
+import com.example.spotify_api.screens.playlist.PlaylistDetailScreen
+import com.example.spotify_api.ui.LoginScreen
+import com.example.spotify_api.ui.MainScreen
 
 @Composable
 fun NavManager() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "MainScreen") {
-        composable("MainScreen") {
+    NavHost(navController = navController, startDestination = Routes.Login.route) {
+        composable(Routes.Login.route) {
+            LoginScreen(navController = navController)
+        }
+
+        composable(Routes.Main.route) {
             MainScreen(navController = navController)
         }
 
         composable(
-            route = "AlbumDetail/{albumId}", 
+            route = Routes.AlbumDetail.route,
             arguments = listOf(navArgument("albumId") { type = NavType.StringType })
         ) {
-            backStackEntry ->
-            val albumId = backStackEntry.arguments?.getString("albumId")
-            // This screen doesn't need to pass the NavController down anymore
-            AlbumDetailScreen(albumId = albumId)
+            AlbumDetailScreen(navController = navController)
+        }
+
+        composable(
+            route = Routes.ArtistDetail.route,
+            arguments = listOf(navArgument("artistId") { type = NavType.StringType })
+        ) {
+            ArtistDetailScreen(
+                navController = navController,
+                onAlbumClick = { albumId ->
+                    navController.navigate(Routes.AlbumDetail.createRoute(albumId))
+                }
+            )
+        }
+
+        composable(
+            route = Routes.CategoryPlaylists.route,
+            arguments = listOf(navArgument("categoryId") { type = NavType.StringType })
+        ) {
+            CategoryPlaylistsScreen(navController = navController)
+        }
+
+        // ¡AÑADIDO! La nueva pantalla de detalles de la playlist.
+        composable(
+            route = Routes.PlaylistDetail.route,
+            arguments = listOf(navArgument("playlistId") { type = NavType.StringType })
+        ) {
+            PlaylistDetailScreen()
         }
     }
 }

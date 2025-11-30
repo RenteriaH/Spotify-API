@@ -8,14 +8,20 @@ import com.example.spotify_api.navigation.NavManager
 import com.example.spotify_api.ui.theme.SpotifyAPITheme
 import dagger.hilt.android.AndroidEntryPoint
 
+/**
+ * La actividad principal y único punto de entrada de la aplicación.
+ * Está anotada con @AndroidEntryPoint para habilitar la inyección de dependencias de Hilt.
+ */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge() // Habilita el modo de pantalla completa de borde a borde.
         setContent {
+            // Se aplica el tema de la aplicación definido en ui.theme.
             SpotifyAPITheme {
-                NavManager() // Just call the NavManager
+                // Se llama al NavManager, que se encargará de toda la lógica de navegación.
+                NavManager()
             }
         }
     }

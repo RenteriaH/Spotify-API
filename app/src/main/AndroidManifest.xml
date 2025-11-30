@@ -1,9 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+Este es el manifiesto de la aplicación. Es un archivo esencial que describe
+la aplicación para el sistema operativo Android.
+-->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Se declara el permiso para acceder a Internet, necesario para hacer llamadas a la API de Spotify. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!--
+    La etiqueta <application> contiene la configuración global de la aplicación.
+    El atributo android:name=".SpotifyApplication" es crucial para que Hilt funcione,
+    ya que apunta a la clase Application que debe estar anotada con @HiltAndroidApp.
+    -->
     <application
         android:name=".SpotifyApplication"
         android:allowBackup="true"
@@ -14,16 +24,43 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SpotifyAPI">
+
+        <!-- Se declara la actividad principal de la aplicación. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.SpotifyAPI">
+
+            <!--
+            Este filtro de intenciones (intent-filter) identifica a MainActivity como el punto de entrada
+            principal de la aplicación. Aparecerá en el lanzador de aplicaciones del dispositivo.
+            -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!--
+            Este filtro de intenciones es para la redirección de Spotify. Le dice al sistema operativo Android
+            que esta actividad puede manejar URLs que coincidan con el esquema y el host definidos.
+            -->
+            <intent-filter>
+                <!-- La acción VIEW indica que la actividad puede mostrar algún tipo de datos. -->
+                <action android:name="android.intent.action.VIEW" />
+                <!-- DEFAULT permite que la actividad sea un objetivo predeterminado si el usuario no ha especificado uno. -->
+                <category android:name="android.intent.category.DEFAULT" />
+                <!-- BROWSABLE permite que la URL sea invocada desde un navegador web. -->
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!--
+                La etiqueta <data> especifica el formato de la URL que esta actividad puede manejar.
+                En este caso, cualquier URL que comience con "spotify-api-app://callback".
+                -->
+                <data
+                    android:scheme="spotify-api-app"
+                    android:host="callback" />
+            </intent-filter>
+
         </activity>
     </application>
 

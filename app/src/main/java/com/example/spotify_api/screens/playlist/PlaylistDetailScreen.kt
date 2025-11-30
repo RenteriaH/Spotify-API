@@ -1,4 +1,4 @@
-package com.example.spotify_api.screens
+package com.example.spotify_api.screens.playlist
 
 import android.graphics.drawable.BitmapDrawable
 import androidx.compose.foundation.background
@@ -21,34 +21,31 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import androidx.palette.graphics.Palette
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.spotify_api.model.Album
-import com.example.spotify_api.model.SimplifiedTrack
-import com.example.spotify_api.viewModel.AlbumDetailViewModel
-import com.example.spotify_api.viewModel.AlbumState
+import com.example.spotify_api.model.Playlist
+import com.example.spotify_api.model.Track
+import com.example.spotify_api.viewModel.PlaylistDetailState
+import com.example.spotify_api.viewModel.PlaylistDetailViewModel
 import java.util.concurrent.TimeUnit
 
 @Composable
-fun AlbumDetailScreen(
-    navController: NavController,
-    viewModel: AlbumDetailViewModel = hiltViewModel()
-) {
-    val albumState by viewModel.albumState.collectAsState()
+fun PlaylistDetailScreen(viewModel: PlaylistDetailViewModel = hiltViewModel()) {
+    val state by viewModel.playlistState.collectAsState()
+
     var dominantColor by remember { mutableStateOf(Color.Black) }
     val context = LocalContext.current
 
-    when (val state = albumState) {
-        is AlbumState.Loading -> {
+    when (val currentState = state) {
+        is PlaylistDetailState.Loading -> {
             Box(modifier = Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         }
-        is AlbumState.Success -> {
-            val imageUrl = state.album.images.firstOrNull()?.url
+        is PlaylistDetailState.Success -> {
+            val imageUrl = currentState.playlist.images.firstOrNull()?.url
 
             LaunchedEffect(imageUrl) {
                 if (imageUrl == null) {
@@ -75,73 +72,86 @@ fun AlbumDetailScreen(
             )
 
             Box(modifier = Modifier.fillMaxSize().background(gradientBrush)) {
-                AlbumDetailContent(album = state.album)
+                PlaylistDetailContent(playlist = currentState.playlist)
             }
         }
-        is AlbumState.Error -> {
+        is PlaylistDetailState.Error -> {
             Box(modifier = Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
-                Text(text = state.message, color = Color.White)
+                Text(text = currentState.message, color = Color.White)
             }
         }
     }
 }
 
 @Composable
-fun AlbumDetailContent(album: Album) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 32.dp)
-    ) {
+fun PlaylistDetailContent(playlist: Playlist) {
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // ¡AÑADIDO! Box para contener la imagen y el degradado.
-                Box(modifier = Modifier.size(250.dp)) {
-                    AsyncImage(
-                        model = album.images.firstOrNull()?.url,
-                        contentDescription = "Portada del álbum",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                    // El velo de degradado que se superpone a la imagen.
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colorStops = arrayOf(
-                                        0.5f to Color.Transparent,
-                                        1f to Color.Black
-                                    )
-                                )
-                            )
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(album.name, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = Color.White)
-                Text(
-                    text = "${album.artists.firstOrNull()?.name ?: "Artista Desconocido"} • ${album.releaseDate.substringBefore('-')}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.LightGray
-                )
-            }
+            PlaylistHeader(playlist = playlist)
         }
-
         item { HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), color = Color.White.copy(alpha = 0.1f)) }
-
-        itemsIndexed(album.tracks?.items ?: emptyList()) { index, track ->
-            TrackRow(track = track, index = index + 1)
+        itemsIndexed(playlist.tracks.items) { index, playlistTrackItem ->
+            playlistTrackItem.track?.let {
+                TrackListItem(track = it, index = index + 1)
+            }
         }
     }
 }
 
 @Composable
-fun TrackRow(track: SimplifiedTrack, index: Int) {
+fun PlaylistHeader(playlist: Playlist) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(top = 24.dp), // Se ajusta el padding
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // ¡AÑADIDO! Box para contener la imagen y el degradado.
+        Box(modifier = Modifier.size(250.dp)) {
+            AsyncImage(
+                model = playlist.images.firstOrNull()?.url,
+                contentDescription = "Portada de la playlist",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            // El velo de degradado que se superpone a la imagen.
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colorStops = arrayOf(
+                                0.5f to Color.Transparent, // La mitad superior es transparente
+                                1f to Color.Black      // La mitad inferior se funde a negro
+                            )
+                        )
+                    )
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(playlist.name, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = Color.White)
+        playlist.description?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                color = Color.LightGray
+            )
+        }
+        playlist.owner.displayName?.let {
+            Text(
+                text = "De $it",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.LightGray
+            )
+        }
+    }
+}
+
+@Composable
+fun TrackListItem(track: Track, index: Int) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -153,13 +163,13 @@ fun TrackRow(track: SimplifiedTrack, index: Int) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = track.name,
+                fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                fontWeight = FontWeight.SemiBold,
                 color = Color.White
             )
             Text(
-                text = track.artists.joinToString(separator = ", ") { it.name },
+                text = track.artists.joinToString { it.name },
                 fontSize = 14.sp,
                 color = Color.LightGray,
                 maxLines = 1,
