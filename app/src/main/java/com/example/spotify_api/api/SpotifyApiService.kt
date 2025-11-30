@@ -8,12 +8,9 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-/**
- * Interfaz de Retrofit para los servicios principales de la API de Spotify.
- */
 interface SpotifyApiService {
 
-    // --- Perfil de Usuario ---
+    // ... (endpoints existentes de Perfil, Artistas, Catálogo, etc.)
     @GET("me")
     suspend fun getUserProfile(@Header("Authorization") token: String): UserProfile
 
@@ -24,7 +21,6 @@ interface SpotifyApiService {
         @Query("limit") limit: Int = 20
     ): TopArtistsResponse
 
-    // --- Artistas ---
     @GET("artists/{id}")
     suspend fun getArtist(
         @Header("Authorization") token: String,
@@ -52,7 +48,6 @@ interface SpotifyApiService {
         @Path("id") artistId: String
     ): RelatedArtistsResponse
 
-    // --- Catálogo ---
     @GET("albums/{id}")
     suspend fun getAlbum(
         @Header("Authorization") token: String,
@@ -77,7 +72,6 @@ interface SpotifyApiService {
         @Query("market") market: String = "ES"
     ): SearchResponse
 
-    // --- Playlists ---
     @GET("playlists/{playlist_id}")
     suspend fun getPlaylist(
         @Header("Authorization") token: String,
@@ -93,7 +87,6 @@ interface SpotifyApiService {
         @Body body: CreatePlaylistRequest
     ): Playlist
 
-    // --- Categorías ---
     @GET("browse/categories")
     suspend fun getCategories(
         @Header("Authorization") token: String,
@@ -109,11 +102,35 @@ interface SpotifyApiService {
         @Query("locale") locale: String? = null
     ): Category
 
-    // ¡AÑADIDO! Endpoint para obtener las playlists de una categoría.
     @GET("browse/categories/{category_id}/playlists")
     suspend fun getCategoryPlaylists(
         @Header("Authorization") token: String,
         @Path("category_id") categoryId: String,
         @Query("limit") limit: Int = 20
     ): CategoryPlaylistsResponse
+
+    // --- AUDIOBOOKS (¡NUEVO!) ---
+
+    @GET("audiobooks/{id}")
+    suspend fun getAudiobook(
+        @Header("Authorization") token: String,
+        @Path("id") id: String,
+        @Query("market") market: String? = null
+    ): Audiobook
+
+    @GET("audiobooks")
+    suspend fun getSeveralAudiobooks(
+        @Header("Authorization") token: String,
+        @Query("ids") ids: String,
+        @Query("market") market: String? = null
+    ): SeveralAudiobooksResponse
+
+    @GET("audiobooks/{id}/chapters")
+    suspend fun getAudiobookChapters(
+        @Header("Authorization") token: String,
+        @Path("id") id: String,
+        @Query("market") market: String? = null,
+        @Query("limit") limit: Int? = null,
+        @Query("offset") offset: Int? = null
+    ): PagingObject<SimplifiedChapter>
 }

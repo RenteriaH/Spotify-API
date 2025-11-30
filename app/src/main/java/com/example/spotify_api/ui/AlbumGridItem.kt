@@ -1,6 +1,5 @@
 package com.example.spotify_api.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -20,14 +19,58 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.spotify_api.model.Album
+import com.example.spotify_api.model.SimplifiedAlbum
 
+/**
+ * Componente para mostrar un álbum en una cuadrícula. 
+ * Acepta un [SimplifiedAlbum], ideal para listas donde no se necesita toda la info.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AlbumGridItem(album: Album, onClick: () -> Unit) {
+fun AlbumGridItem(album: SimplifiedAlbum, onAlbumClick: (String) -> Unit) {
     Card(
-        modifier = Modifier
-            .padding(8.dp)
-            .clickable(onClick = onClick),
+        onClick = { onAlbumClick(album.id) }, 
+        modifier = Modifier.padding(8.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            AsyncImage(
+                model = album.images.firstOrNull()?.url,
+                contentDescription = "Album cover",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f),
+                contentScale = ContentScale.Crop
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = album.name,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+            )
+            Text(
+                text = album.artists.joinToString { it.name },
+                fontSize = 12.sp,
+                color = Color.Gray,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+/**
+ * ¡SOBRECARGA AÑADIDA! 
+ * Esta es una segunda versión del mismo componente que acepta un [Album] completo.
+ * Esto nos da flexibilidad para usar el componente en diferentes pantallas sin errores.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AlbumGridItem(album: Album, onAlbumClick: (String) -> Unit) {
+    Card(
+        onClick = { onAlbumClick(album.id) },
+        modifier = Modifier.padding(8.dp)
     ) {
         Column(
             modifier = Modifier.padding(8.dp),

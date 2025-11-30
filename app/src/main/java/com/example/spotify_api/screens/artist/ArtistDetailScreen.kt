@@ -94,6 +94,7 @@ fun ArtistDetailContent(
                 contentPadding = PaddingValues(top = 8.dp)
             ) {
                 items(albums) { album ->
+                    // ¡CORREGIDO! Se le pasa el SimplifiedAlbum directamente.
                     AlbumGridItem(album = album, onAlbumClick = onAlbumClick)
                 }
             }
@@ -116,7 +117,6 @@ fun ArtistHeader(navController: NavController, artist: Artist) {
         Text("${artist.followers?.total ?: 0} seguidores", style = MaterialTheme.typography.bodyLarge)
         Spacer(modifier = Modifier.height(16.dp))
 
-        // ¡AÑADIDO! Chips de género clickeables.
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
@@ -124,7 +124,6 @@ fun ArtistHeader(navController: NavController, artist: Artist) {
         ) {
             artist.genres?.forEach { genre ->
                 SuggestionChip(
-                    // ¡CORREGIDO! Se navega a la pantalla de búsqueda con el género como consulta.
                     onClick = { navController.navigate(Routes.Search.createRoute(genre)) },
                     label = { Text(genre.replaceFirstChar { it.uppercase() }) },
                     modifier = Modifier.padding(horizontal = 4.dp)

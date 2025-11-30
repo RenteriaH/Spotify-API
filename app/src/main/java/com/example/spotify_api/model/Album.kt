@@ -8,7 +8,9 @@ data class SearchResponse(
     val albums: AlbumSearchResult? = null,
     val artists: ArtistSearchResult? = null,
     val playlists: PlaylistSearchResult? = null,
-    val tracks: TrackSearchResult? = null
+    val tracks: TrackSearchResult? = null,
+    // ¡AÑADIDO! La respuesta de búsqueda ahora puede contener audiolibros.
+    val audiobooks: AudiobookSearchResult? = null 
 )
 
 data class AlbumSearchResult(
@@ -23,6 +25,13 @@ data class ArtistSearchResult(
 
 data class TrackSearchResult(
     val items: List<Track>,
+    val limit: Int, val next: String?, val offset: Int, val previous: String?, val total: Int
+)
+
+// ¡AÑADIDO! El objeto que contiene los resultados de una búsqueda de audiolibros.
+
+data class AudiobookSearchResult(
+    val items: List<SimplifiedAudiobook>,
     val limit: Int, val next: String?, val offset: Int, val previous: String?, val total: Int
 )
 
@@ -48,7 +57,6 @@ data class Album(
     val type: String,
     val uri: String,
     val artists: List<Artist>,
-    // ¡CORREGIDO! Un álbum contiene un objeto 'Tracks', no 'PagingObject<PlaylistTrack>'.
     val tracks: Tracks? = null,
     val popularity: Int? = null,
     val label: String? = null,
@@ -69,7 +77,6 @@ data class Artist(
 )
 
 data class Track(
-    // ¡CORREGIDO! El 'album' dentro de una canción debe ser un 'SimplifiedAlbum' para evitar bucles infinitos.
     val album: SimplifiedAlbum,
     val artists: List<Artist>,
     @SerializedName("available_markets") val availableMarkets: List<String>?,

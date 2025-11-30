@@ -10,7 +10,7 @@ class SpotifyRepository @Inject constructor(
     private val authManager: SpotifyAuthManager
 ) {
 
-    // --- Perfil de Usuario ---
+    // ... (funciones existentes de Perfil, Artistas, Catálogo, etc.)
     suspend fun getUserProfile(): UserProfile {
         val token = authManager.getBearerToken() ?: throw Exception("Token not found")
         return spotifyApiService.getUserProfile(token)
@@ -21,7 +21,6 @@ class SpotifyRepository @Inject constructor(
         return spotifyApiService.getTopArtists(token, timeRange, limit)
     }
 
-    // --- Artistas ---
     suspend fun getArtist(artistId: String): Artist {
         val token = authManager.getBearerToken() ?: throw Exception("Token not found")
         return spotifyApiService.getArtist(token, artistId)
@@ -42,7 +41,6 @@ class SpotifyRepository @Inject constructor(
         return spotifyApiService.getRelatedArtists(token, artistId)
     }
 
-    // --- Catálogo ---
     suspend fun getAlbum(albumId: String): Album {
         val token = authManager.getBearerToken() ?: throw Exception("Token not found")
         return spotifyApiService.getAlbum(token, albumId)
@@ -64,7 +62,6 @@ class SpotifyRepository @Inject constructor(
         return spotifyApiService.getNewReleases(token)
     }
 
-    // --- Playlists ---
     suspend fun getPlaylist(playlistId: String, fields: String? = null): Playlist {
         val token = authManager.getBearerToken() ?: throw Exception("Token not found")
         return spotifyApiService.getPlaylist(token, playlistId, "ES", fields)
@@ -75,7 +72,6 @@ class SpotifyRepository @Inject constructor(
         return spotifyApiService.createPlaylist(token, userId, request)
     }
 
-    // --- Categorías ---
     suspend fun getCategories(locale: String? = null, limit: Int? = null, offset: Int? = null): CategoriesResponse {
         val token = authManager.getBearerToken() ?: throw Exception("Token not found")
         return spotifyApiService.getCategories(token, locale, limit, offset)
@@ -89,5 +85,22 @@ class SpotifyRepository @Inject constructor(
     suspend fun getCategoryPlaylists(categoryId: String): CategoryPlaylistsResponse {
         val token = authManager.getBearerToken() ?: throw Exception("Token not found")
         return spotifyApiService.getCategoryPlaylists(token, categoryId)
+    }
+
+    // --- AUDIOBOOKS (¡NUEVO!) ---
+
+    suspend fun getAudiobook(id: String, market: String? = null): Audiobook {
+        val token = authManager.getBearerToken() ?: throw Exception("Token not found")
+        return spotifyApiService.getAudiobook(token, id, market)
+    }
+
+    suspend fun getSeveralAudiobooks(ids: String, market: String? = null): SeveralAudiobooksResponse {
+        val token = authManager.getBearerToken() ?: throw Exception("Token not found")
+        return spotifyApiService.getSeveralAudiobooks(token, ids, market)
+    }
+
+    suspend fun getAudiobookChapters(id: String, market: String? = null, limit: Int? = null, offset: Int? = null): PagingObject<SimplifiedChapter> {
+        val token = authManager.getBearerToken() ?: throw Exception("Token not found")
+        return spotifyApiService.getAudiobookChapters(token, id, market, limit, offset)
     }
 }

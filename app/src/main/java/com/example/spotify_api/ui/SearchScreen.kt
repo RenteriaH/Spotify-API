@@ -3,10 +3,12 @@ package com.example.spotify_api.ui
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -37,102 +39,105 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel = hilt
     val screenState by viewModel.screenState
     val selectedCategory by viewModel.selectedCategory
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    Column(modifier = Modifier.fillMaxSize().padding(top = 16.dp)) {
         TextField(
             value = searchText,
             onValueChange = viewModel::onSearchTextChanged,
-            label = { Text("Busca canciones, artistas o pódcasts") },
-            modifier = Modifier.fillMaxWidth()
+            label = { Text("Busca artistas, álbumes, etc.") },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            trailingIcon = {
+                if (searchText.isNotBlank()) {
+                    IconButton(onClick = { viewModel.onSearchTextChanged("") }) {
+                        Icon(Icons.Default.Close, contentDescription = "Limpiar búsqueda")
+                    }
+                }
+            }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-
         if (searchText.isNotBlank()) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-                // Lógica simplificada para los botones de categoría
-                val categories = listOf("artist", "album", "playlist")
-                val selected = selectedCategory
-
-                if (selected != "track") {
-                    CategoryButtonWithClear(label = "Artistas", isSelected = selected == "artist", onClick = { viewModel.onCategorySelected("artist") })
-                    Spacer(modifier = Modifier.width(8.dp))
-                    CategoryButtonWithClear(label = "Álbumes", isSelected = selected == "album", onClick = { viewModel.onCategorySelected("album") })
-                    Spacer(modifier = Modifier.width(8.dp))
-                    CategoryButtonWithClear(label = "Playlists", isSelected = selected == "playlist", onClick = { viewModel.onCategorySelected("playlist") })
-                } else {
-                    CategoryButtonWithClear(label = "Artistas", isSelected = false, onClick = { viewModel.onCategorySelected("artist") })
-                    Spacer(modifier = Modifier.width(8.dp))
-                    CategoryButtonWithClear(label = "Álbumes", isSelected = false, onClick = { viewModel.onCategorySelected("album") })
-                    Spacer(modifier = Modifier.width(8.dp))
-                    CategoryButtonWithClear(label = "Playlists", isSelected = false, onClick = { viewModel.onCategorySelected("playlist") })
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp)
+            ) {
+                // ¡CORREGIDO! Se quita "track" de la lista de botones.
+                val categories = listOf("artist", "album", "playlist", "audiobook")
+                items(categories) { category ->
+                    CategoryButton(
+                        label = category.replaceFirstChar { it.titlecase() },
+                        isSelected = selectedCategory == category,
+                        onClick = { viewModel.onCategorySelected(category) }
+                    )
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        when (val state = screenState) {
-            is SearchScreenState.Loading -> Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) { CircularProgressIndicator() }
-
-            is SearchScreenState.Error -> Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) { Text(state.message) }
-
-            is SearchScreenState.ShowingCategories -> {
-                Text("Explorar todo", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(8.dp))
-                LazyVerticalGrid(columns = GridCells.Fixed(2), modifier = Modifier.fillMaxSize()) {
-                    items(state.categories) { category ->
-                        CategoryCard(category) {
-                            navController.navigate(Routes.CategoryPlaylists.createRoute(category.id))
+        Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+            when (val state = screenState) {
+                is SearchScreenState.Loading -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                is SearchScreenState.Error -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(state.message) }
+                is SearchScreenState.ShowingCategories -> {
+                    Column {
+                        Text("Explorar todo", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LazyVerticalGrid(columns = GridCells.Fixed(2), modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            items(state.categories) { category ->
+                                CategoryCard(category) {
+                                    navController.navigate(Routes.CategoryPlaylists.createRoute(category.id))
+                                }
+                            }
                         }
                     }
                 }
+                is SearchScreenState.ShowSearchResults -> {
+                    SearchResultsContent(navController, state.result)
+                }
             }
+        }
+    }
+}
 
-            is SearchScreenState.ShowSearchResults -> {
-                when (val result = state.result) {
-                    is SearchResult.TrackResult -> {
-                        LazyColumn(Modifier.fillMaxSize()) {
-                            items(result.tracks) { track ->
-                                TrackItem(track)
-                            }
-                        }
+@Composable
+fun SearchResultsContent(navController: NavController, result: SearchResult) {
+    when (result) {
+        is SearchResult.TrackResult -> {
+            LazyColumn(Modifier.fillMaxSize()) {
+                items(result.tracks) { track -> TrackItem(track) }
+            }
+        }
+        is SearchResult.AlbumResult -> {
+            LazyVerticalGrid(columns = GridCells.Fixed(2)) {
+                items(result.albums) { album ->
+                    // ¡CORREGIDO! Se activa la navegación para álbumes.
+                    AlbumGridItem(album = album) { albumId ->
+                        navController.navigate(Routes.AlbumDetail.createRoute(albumId))
                     }
-
-                    is SearchResult.AlbumResult -> {
-                        LazyVerticalGrid(columns = GridCells.Fixed(2)) {
-                            items(result.albums) { album ->
-                                AlbumGridItem(album) { albumId ->
-                                    navController.navigate(Routes.AlbumDetail.createRoute(albumId))
-                                }
-                            }
-                        }
-                    }
-
-                    is SearchResult.PlaylistResult -> {
-                        LazyColumn(Modifier.fillMaxSize()) {
-                            val validPlaylists = result.playlists.filterNotNull()
-                            items(validPlaylists) { playlist ->
-                                PlaylistItem(playlist) {
-                                    navController.navigate(Routes.PlaylistDetail.createRoute(playlist.id))
-                                }
-                            }
-                        }
-                    }
-
-                    is SearchResult.ArtistResult -> {
-                        LazyVerticalGrid(columns = GridCells.Fixed(2)) {
-                            items(result.artists) { artist ->
-                                ArtistGridItem(artist) { artistId ->
-                                    navController.navigate(Routes.ArtistDetail.createRoute(artistId))
-                                }
-                            }
-                        }
+                }
+            }
+        }
+        is SearchResult.PlaylistResult -> {
+            LazyColumn(Modifier.fillMaxSize()) {
+                items(result.playlists.filterNotNull()) { playlist ->
+                    PlaylistItem(playlist) { navController.navigate(Routes.PlaylistDetail.createRoute(playlist.id)) }
+                }
+            }
+        }
+        is SearchResult.ArtistResult -> {
+            LazyVerticalGrid(columns = GridCells.Fixed(2)) {
+                items(result.artists) { artist ->
+                    ArtistGridItem(artist) { artistId -> navController.navigate(Routes.ArtistDetail.createRoute(artistId)) }
+                }
+            }
+        }
+        is SearchResult.AudiobookResult -> {
+            LazyVerticalGrid(columns = GridCells.Fixed(2)) {
+                items(result.audiobooks) { audiobook ->
+                    // ¡CORREGIDO! Se activa la navegación para audiolibros.
+                    AudiobookGridItem(audiobook) { audiobookId ->
+                        navController.navigate(Routes.AudiobookDetail.createRoute(audiobookId))
                     }
                 }
             }
@@ -143,25 +148,19 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel = hilt
 // --- COMPONENTES DE LA INTERFAZ ---
 
 @Composable
-fun CategoryButtonWithClear(label: String, isSelected: Boolean, onClick: () -> Unit) {
-    Box {
-        Button(
-            onClick = onClick,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-                contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-            )
-        ) {
-            Text(text = label)
-            if (isSelected) Spacer(Modifier.width(16.dp))
-        }
+fun CategoryButton(label: String, isSelected: Boolean, onClick: () -> Unit) {
+    val buttonColors = if (isSelected) {
+        ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
+    } else {
+        ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface)
+    }
+
+    Button(onClick = onClick, colors = buttonColors, shape = RoundedCornerShape(20.dp)) {
+        Text(text = label)
+        // Se muestra el icono de cierre solo si está seleccionado
         if (isSelected) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Deseleccionar",
-                tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp).size(18.dp).clickable(onClick = onClick)
-            )
+            Spacer(Modifier.width(4.dp))
+            Icon(imageVector = Icons.Default.Close, contentDescription = "Deseleccionar", modifier = Modifier.size(18.dp))
         }
     }
 }
@@ -169,14 +168,12 @@ fun CategoryButtonWithClear(label: String, isSelected: Boolean, onClick: () -> U
 @Composable
 fun ArtistGridItem(artist: Artist, onArtistClick: (String) -> Unit) {
     Column(
-        modifier = Modifier.padding(8.dp).clickable { onArtistClick(artist.id) },
+        modifier = Modifier.padding(4.dp).clickable { onArtistClick(artist.id) },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AsyncImage(
-            model = artist.images?.firstOrNull()?.url,
-            contentDescription = "Foto del artista",
-            modifier = Modifier.size(128.dp).clip(RoundedCornerShape(8.dp)),
-            contentScale = ContentScale.Crop
+            model = artist.images?.firstOrNull()?.url, contentDescription = "Foto del artista",
+            modifier = Modifier.size(128.dp).clip(CircleShape), contentScale = ContentScale.Crop
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(text = artist.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -184,48 +181,34 @@ fun ArtistGridItem(artist: Artist, onArtistClick: (String) -> Unit) {
 }
 
 @Composable
-fun AlbumGridItem(album: Album, onAlbumClick: (String) -> Unit) {
+fun AudiobookGridItem(audiobook: SimplifiedAudiobook, onAudiobookClick: (String) -> Unit) {
     Column(
-        modifier = Modifier.padding(8.dp).clickable { onAlbumClick(album.id) },
+        modifier = Modifier.padding(4.dp).clickable { onAudiobookClick(audiobook.id) },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AsyncImage(
-            model = album.images.firstOrNull()?.url,
-            contentDescription = "Portada del álbum",
-            modifier = Modifier.size(128.dp).clip(RoundedCornerShape(8.dp)),
-            contentScale = ContentScale.Crop
+            model = audiobook.images.firstOrNull()?.url, contentDescription = "Portada del audiolibro",
+            modifier = Modifier.size(128.dp).clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Text(text = album.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text = audiobook.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text = "Audiolibro", fontSize = 12.sp, color = Color.Gray)
     }
 }
-
-@Composable
-fun AlbumGridItem(album: SimplifiedAlbum, onAlbumClick: (String) -> Unit) {
-    Column(
-        modifier = Modifier.padding(8.dp).clickable { onAlbumClick(album.id) },
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        AsyncImage(
-            model = album.images.firstOrNull()?.url,
-            contentDescription = "Portada del álbum",
-            modifier = Modifier.size(128.dp).clip(RoundedCornerShape(8.dp)),
-            contentScale = ContentScale.Crop
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = album.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-    }
-}
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CategoryCard(category: Category, onClick: () -> Unit) { // Se añade el callback onClick
-    Card(modifier = Modifier.padding(8.dp).clickable(onClick = onClick), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
-        Column(modifier = Modifier.padding(16.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            AsyncImage(model = category.icons.firstOrNull()?.url, contentDescription = "Icono de la categoría", modifier = Modifier.size(64.dp))
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = category.name, fontWeight = FontWeight.Bold, maxLines = 1)
+fun CategoryCard(category: Category, onClick: () -> Unit) {
+    Card(modifier = Modifier.clickable(onClick = onClick), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+        Box(modifier = Modifier.aspectRatio(1f), contentAlignment = Alignment.Center) {
+            AsyncImage(
+                model = category.icons.firstOrNull()?.url, contentDescription = null,
+                modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop
+            )
+            Text(
+                text = category.name, fontWeight = FontWeight.Bold, color = Color.White,
+                modifier = Modifier.padding(8.dp).align(Alignment.BottomStart)
+            )
         }
     }
 }
@@ -233,7 +216,7 @@ fun CategoryCard(category: Category, onClick: () -> Unit) { // Se añade el call
 @Composable
 fun TrackItem(track: Track, onClick: () -> Unit = {}) {
     Row(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        AsyncImage(model = track.album.images.firstOrNull()?.url, contentDescription = "Portada del álbum", modifier = Modifier.size(56.dp), contentScale = ContentScale.Crop)
+        AsyncImage(model = track.album.images.firstOrNull()?.url, contentDescription = "Portada del álbum", modifier = Modifier.size(56.dp).clip(RoundedCornerShape(4.dp)), contentScale = ContentScale.Crop)
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(text = track.name, fontWeight = FontWeight.Bold, maxLines = 1)
@@ -245,11 +228,11 @@ fun TrackItem(track: Track, onClick: () -> Unit = {}) {
 @Composable
 fun PlaylistItem(playlist: Playlist, onClick: () -> Unit = {}) {
     Row(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        AsyncImage(model = playlist.images.firstOrNull()?.url, contentDescription = "Portada de la playlist", modifier = Modifier.size(56.dp), contentScale = ContentScale.Crop)
+        AsyncImage(model = playlist.images.firstOrNull()?.url, contentDescription = "Portada de la playlist", modifier = Modifier.size(56.dp).clip(RoundedCornerShape(4.dp)), contentScale = ContentScale.Crop)
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(text = playlist.name, fontWeight = FontWeight.Bold, maxLines = 1)
-            val ownerName = playlist.owner?.displayName ?: "Playlist"
+            val ownerName = playlist.owner.displayName ?: "Playlist"
             Text(text = ownerName, fontSize = 14.sp, color = Color.Gray, maxLines = 1)
         }
     }

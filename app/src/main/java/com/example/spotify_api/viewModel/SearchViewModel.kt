@@ -17,6 +17,7 @@ sealed class SearchResult {
     data class AlbumResult(val albums: List<Album>) : SearchResult()
     data class PlaylistResult(val playlists: List<Playlist>) : SearchResult()
     data class ArtistResult(val artists: List<Artist>) : SearchResult()
+    data class AudiobookResult(val audiobooks: List<SimplifiedAudiobook>) : SearchResult()
 }
 
 sealed class SearchScreenState {
@@ -29,7 +30,7 @@ sealed class SearchScreenState {
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val repository: SpotifyRepository,
-    savedStateHandle: SavedStateHandle // Se añade para leer los argumentos de navegación.
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _searchText = mutableStateOf("")
@@ -44,7 +45,6 @@ class SearchViewModel @Inject constructor(
     private var searchJob: Job? = null
 
     init {
-        // Se comprueba si se ha recibido una búsqueda inicial (desde un género, por ejemplo).
         val initialQuery = savedStateHandle.get<String>("query")
         if (!initialQuery.isNullOrBlank()) {
             onSearchTextChanged(initialQuery)
@@ -66,6 +66,7 @@ class SearchViewModel @Inject constructor(
     }
 
     fun onCategorySelected(category: String) {
+        // ¡CORREGIDO! Si se pulsa la misma categoría, se vuelve a "track" (deselección).
         val newCategory = if (_selectedCategory.value == category) "track" else category
         _selectedCategory.value = newCategory
         performSearch(category = newCategory)
@@ -100,12 +101,12 @@ class SearchViewModel @Inject constructor(
 
             try {
                 val response = repository.search(query, type = category)
-                // ¡CORREGIDO! Se filtran los resultados nulos en TODAS las categorías para evitar cierres.
                 val searchResult: SearchResult = when (category) {
                     "track" -> SearchResult.TrackResult(response.tracks?.items?.filterNotNull() ?: emptyList())
                     "album" -> SearchResult.AlbumResult(response.albums?.items?.filterNotNull() ?: emptyList())
                     "playlist" -> SearchResult.PlaylistResult(response.playlists?.items?.filterNotNull() ?: emptyList())
                     "artist" -> SearchResult.ArtistResult(response.artists?.items?.filterNotNull() ?: emptyList())
+                    "audiobook" -> SearchResult.AudiobookResult(response.audiobooks?.items?.filterNotNull() ?: emptyList())
                     else -> throw IllegalArgumentException("Categoría no soportada: $category")
                 }
                 _screenState.value = SearchScreenState.ShowSearchResults(searchResult, query)

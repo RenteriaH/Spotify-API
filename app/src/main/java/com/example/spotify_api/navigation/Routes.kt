@@ -32,8 +32,12 @@ sealed class Routes(val route: String) {
         fun createRoute(categoryId: String) = "CategoryPlaylists/$categoryId"
     }
 
-    // ¡AÑADIDA! La nueva ruta para el detalle de una playlist.
     object PlaylistDetail : Routes("PlaylistDetail/{playlistId}") {
         fun createRoute(playlistId: String) = "PlaylistDetail/$playlistId"
+    }
+
+    // ¡AÑADIDO! La nueva ruta para el detalle de un audiolibro.
+    object AudiobookDetail : Routes("AudiobookDetail/{audiobookId}") {
+        fun createRoute(audiobookId: String) = "AudiobookDetail/$audiobookId"
     }
 }

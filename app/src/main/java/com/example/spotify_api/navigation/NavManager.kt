@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.spotify_api.screens.AlbumDetailScreen
 import com.example.spotify_api.screens.artist.ArtistDetailScreen
+import com.example.spotify_api.screens.audiobook.AudiobookDetailScreen
 import com.example.spotify_api.screens.category.CategoryPlaylistsScreen
 import com.example.spotify_api.screens.playlist.PlaylistDetailScreen
 import com.example.spotify_api.ui.LoginScreen
@@ -52,12 +53,19 @@ fun NavManager() {
             CategoryPlaylistsScreen(navController = navController)
         }
 
-        // ¡AÑADIDO! La nueva pantalla de detalles de la playlist.
         composable(
             route = Routes.PlaylistDetail.route,
             arguments = listOf(navArgument("playlistId") { type = NavType.StringType })
         ) {
             PlaylistDetailScreen()
+        }
+
+        // ¡AÑADIDO! La nueva pantalla de detalles del audiolibro.
+        composable(
+            route = Routes.AudiobookDetail.route,
+            arguments = listOf(navArgument("audiobookId") { type = NavType.StringType })
+        ) {
+            AudiobookDetailScreen()
         }
     }
 }
