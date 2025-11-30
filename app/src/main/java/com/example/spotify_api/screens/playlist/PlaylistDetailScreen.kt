@@ -130,7 +130,7 @@ fun PlaylistHeader(playlist: Playlist) {
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Text(playlist.name, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = Color.White)
+        Text(playlist.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Color.White)
         playlist.description?.let {
             Text(
                 text = it,

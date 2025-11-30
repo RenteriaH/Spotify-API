@@ -57,19 +57,32 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel = hilt
         Spacer(modifier = Modifier.height(16.dp))
 
         if (searchText.isNotBlank()) {
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp)
-            ) {
-                // ¡CORREGIDO! Se quita "track" de la lista de botones.
-                val categories = listOf("artist", "album", "playlist", "audiobook")
-                items(categories) { category ->
+            val categories = listOf("artist", "album", "playlist", "audiobook")
+
+            // ¡CORREGIDO! Se usa LazyRow cuando no hay filtro, y Row cuando sí lo hay.
+            if (selectedCategory != "track") {
+                // Si hay un filtro activo, muestra solo ese botón en una Row normal.
+                Row(modifier = Modifier.padding(horizontal = 16.dp)) {
                     CategoryButton(
-                        label = category.replaceFirstChar { it.titlecase() },
-                        isSelected = selectedCategory == category,
-                        onClick = { viewModel.onCategorySelected(category) }
+                        label = selectedCategory.replaceFirstChar { it.titlecase() },
+                        isSelected = true,
+                        onClick = { viewModel.onCategorySelected(selectedCategory) } // Al pulsarlo, se deselecciona
                     )
+                }
+            } else {
+                // Si no hay filtro, muestra todos en una LazyRow deslizable.
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp)
+                ) {
+                    items(categories) { category ->
+                        CategoryButton(
+                            label = category.replaceFirstChar { it.titlecase() },
+                            isSelected = false,
+                            onClick = { viewModel.onCategorySelected(category) }
+                        )
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -104,17 +117,12 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel = hilt
 fun SearchResultsContent(navController: NavController, result: SearchResult) {
     when (result) {
         is SearchResult.TrackResult -> {
-            LazyColumn(Modifier.fillMaxSize()) {
-                items(result.tracks) { track -> TrackItem(track) }
-            }
+            LazyColumn(Modifier.fillMaxSize()) { items(result.tracks) { track -> TrackItem(track) } }
         }
         is SearchResult.AlbumResult -> {
-            LazyVerticalGrid(columns = GridCells.Fixed(2)) {
-                items(result.albums) { album ->
-                    // ¡CORREGIDO! Se activa la navegación para álbumes.
-                    AlbumGridItem(album = album) { albumId ->
-                        navController.navigate(Routes.AlbumDetail.createRoute(albumId))
-                    }
+            LazyVerticalGrid(columns = GridCells.Fixed(2), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                items(result.albums) {
+                    album -> AlbumGridItem(album = album) { albumId -> navController.navigate(Routes.AlbumDetail.createRoute(albumId)) }
                 }
             }
         }
@@ -126,19 +134,16 @@ fun SearchResultsContent(navController: NavController, result: SearchResult) {
             }
         }
         is SearchResult.ArtistResult -> {
-            LazyVerticalGrid(columns = GridCells.Fixed(2)) {
+            LazyVerticalGrid(columns = GridCells.Fixed(2), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 items(result.artists) { artist ->
                     ArtistGridItem(artist) { artistId -> navController.navigate(Routes.ArtistDetail.createRoute(artistId)) }
                 }
             }
         }
         is SearchResult.AudiobookResult -> {
-            LazyVerticalGrid(columns = GridCells.Fixed(2)) {
+            LazyVerticalGrid(columns = GridCells.Fixed(2), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 items(result.audiobooks) { audiobook ->
-                    // ¡CORREGIDO! Se activa la navegación para audiolibros.
-                    AudiobookGridItem(audiobook) { audiobookId ->
-                        navController.navigate(Routes.AudiobookDetail.createRoute(audiobookId))
-                    }
+                    AudiobookGridItem(audiobook) { audiobookId -> navController.navigate(Routes.AudiobookDetail.createRoute(audiobookId)) }
                 }
             }
         }
@@ -157,7 +162,6 @@ fun CategoryButton(label: String, isSelected: Boolean, onClick: () -> Unit) {
 
     Button(onClick = onClick, colors = buttonColors, shape = RoundedCornerShape(20.dp)) {
         Text(text = label)
-        // Se muestra el icono de cierre solo si está seleccionado
         if (isSelected) {
             Spacer(Modifier.width(4.dp))
             Icon(imageVector = Icons.Default.Close, contentDescription = "Deseleccionar", modifier = Modifier.size(18.dp))
@@ -199,7 +203,7 @@ fun AudiobookGridItem(audiobook: SimplifiedAudiobook, onAudiobookClick: (String)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryCard(category: Category, onClick: () -> Unit) {
-    Card(modifier = Modifier.clickable(onClick = onClick), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+    Card(modifier = Modifier.clickable(onClick = onClick).padding(4.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
         Box(modifier = Modifier.aspectRatio(1f), contentAlignment = Alignment.Center) {
             AsyncImage(
                 model = category.icons.firstOrNull()?.url, contentDescription = null,

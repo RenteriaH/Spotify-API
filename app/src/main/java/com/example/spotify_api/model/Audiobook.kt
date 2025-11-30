@@ -8,6 +8,7 @@ import com.google.gson.annotations.SerializedName
 data class Audiobook(
     val id: String,
     val name: String,
+    val href: String, // ¡CORREGIDO! Este campo faltaba y causaba el error.
     val authors: List<Author>,
     val narrators: List<Narrator>,
     val publisher: String,
@@ -71,7 +72,10 @@ data class SimplifiedChapter(
     @SerializedName("external_urls") val externalUrls: ExternalUrls,
     val uri: String,
     val type: String,
-    @SerializedName("resume_point") val resumePoint: ResumePoint?
+    val href: String,
+    @SerializedName("available_markets") val availableMarkets: List<String>?,
+    @SerializedName("resume_point") val resumePoint: ResumePoint?,
+    val restrictions: Restrictions?
 )
 
 /**
@@ -97,8 +101,15 @@ data class ResumePoint(
 )
 
 /**
+ * Modelo para las restricciones de contenido.
+ */
+data class Restrictions(
+    val reason: String
+)
+
+/**
  * Objeto de respuesta para la petición de varios audiolibros.
  */
 data class SeveralAudiobooksResponse(
-    val audiobooks: List<Audiobook>
+    val audiobooks: List<Audiobook?>
 )
