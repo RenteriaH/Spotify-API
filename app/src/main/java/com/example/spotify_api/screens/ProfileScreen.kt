@@ -46,14 +46,16 @@ fun ProfileScreen(
                 LazyColumn(horizontalAlignment = Alignment.CenterHorizontally) {
                     item {
                         AsyncImage(
-                            model = user.images.firstOrNull()?.url,
+                            model = user.images?.firstOrNull()?.url,
                             contentDescription = "Foto de perfil",
                             modifier = Modifier.size(150.dp).clip(CircleShape),
                             contentScale = ContentScale.Crop
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(user.displayName, fontWeight = FontWeight.Bold, fontSize = 24.sp)
-                        Text("${user.followers.total} Seguidores", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (user.followers != null) {
+                            Text("${user.followers.total} Seguidores", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
                         Spacer(modifier = Modifier.height(24.dp))
                         HorizontalDivider()
                         Spacer(modifier = Modifier.height(16.dp))

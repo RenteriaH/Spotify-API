@@ -27,6 +27,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.spotify_api.model.Playlist
 import com.example.spotify_api.model.Track
+import com.example.spotify_api.utils.formatNumberWithCommas
 import com.example.spotify_api.viewModel.PlaylistDetailState
 import com.example.spotify_api.viewModel.PlaylistDetailViewModel
 import java.util.concurrent.TimeUnit
@@ -104,10 +105,9 @@ fun PlaylistHeader(playlist: Playlist) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .padding(top = 24.dp), // Se ajusta el padding
+            .padding(top = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // ¡AÑADIDO! Box para contener la imagen y el degradado.
         Box(modifier = Modifier.size(250.dp)) {
             AsyncImage(
                 model = playlist.images.firstOrNull()?.url,
@@ -115,15 +115,14 @@ fun PlaylistHeader(playlist: Playlist) {
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
-            // El velo de degradado que se superpone a la imagen.
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
                         Brush.verticalGradient(
                             colorStops = arrayOf(
-                                0.5f to Color.Transparent, // La mitad superior es transparente
-                                1f to Color.Black      // La mitad inferior se funde a negro
+                                0.5f to Color.Transparent,
+                                1f to Color.Black
                             )
                         )
                     )
@@ -147,6 +146,14 @@ fun PlaylistHeader(playlist: Playlist) {
                 color = Color.LightGray
             )
         }
+        // --- ¡CAMBIO AQUÍ! ---
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "${formatNumberWithCommas(playlist.followers.total)} seguidores",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.LightGray
+        )
+        // --- FIN DEL CAMBIO ---
     }
 }
 

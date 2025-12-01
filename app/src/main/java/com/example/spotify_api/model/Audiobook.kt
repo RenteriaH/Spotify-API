@@ -8,7 +8,7 @@ import com.google.gson.annotations.SerializedName
 data class Audiobook(
     val id: String,
     val name: String,
-    val href: String, // ¡CORREGIDO! Este campo faltaba y causaba el error.
+    val href: String,
     val authors: List<Author>,
     val narrators: List<Narrator>,
     val publisher: String,

@@ -40,10 +40,10 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             // Se actualiza el estado a "Cargando" para que la UI pueda mostrar un indicador.
             _authState.value = AuthState.Loading
-            // Se solicita el token de acceso al gestor de autenticación.
-            val token = authManager.getAccessToken(code)
-            if (token != null) {
-                // Si se obtiene el token, el estado cambia a "Autenticado".
+            // Se solicita el intercambio del código por un token.
+            val success = authManager.exchangeCodeForToken(code)
+            if (success) {
+                // Si el intercambio es exitoso, el estado cambia a "Autenticado".
                 _authState.value = AuthState.Authenticated
             } else {
                 // Si falla, el estado cambia a "Error".

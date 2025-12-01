@@ -10,7 +10,6 @@ class SpotifyRepository @Inject constructor(
     private val authManager: SpotifyAuthManager
 ) {
 
-    // ... (funciones existentes de Perfil, Artistas, Catálogo, etc.)
     suspend fun getUserProfile(): UserProfile {
         val token = authManager.getBearerToken() ?: throw Exception("Token not found")
         return spotifyApiService.getUserProfile(token)
@@ -57,7 +56,7 @@ class SpotifyRepository @Inject constructor(
         return spotifyApiService.search(token, query, type, "ES", limit, offset, includeExternal)
     }
 
-    suspend fun getNewReleases(): SearchResponse {
+    suspend fun getNewReleases(): NewReleasesResponse {
         val token = authManager.getBearerToken() ?: throw Exception("Token not found")
         return spotifyApiService.getNewReleases(token)
     }
@@ -87,8 +86,6 @@ class SpotifyRepository @Inject constructor(
         return spotifyApiService.getCategoryPlaylists(token, categoryId)
     }
 
-    // --- AUDIOBOOKS (¡NUEVO!) ---
-
     suspend fun getAudiobook(id: String, market: String? = null): Audiobook {
         val token = authManager.getBearerToken() ?: throw Exception("Token not found")
         return spotifyApiService.getAudiobook(token, id, market)
@@ -102,5 +99,15 @@ class SpotifyRepository @Inject constructor(
     suspend fun getAudiobookChapters(id: String, market: String? = null, limit: Int? = null, offset: Int? = null): PagingObject<SimplifiedChapter> {
         val token = authManager.getBearerToken() ?: throw Exception("Token not found")
         return spotifyApiService.getAudiobookChapters(token, id, market, limit, offset)
+    }
+
+    suspend fun getFeaturedPlaylists(): FeaturedPlaylistsResponse {
+        val token = authManager.getBearerToken() ?: throw Exception("Token not found")
+        return spotifyApiService.getFeaturedPlaylists(token)
+    }
+
+    suspend fun getMyTopTracks(): PagingObject<Track> {
+        val token = authManager.getBearerToken() ?: throw Exception("Token not found")
+        return spotifyApiService.getMyTopTracks(token)
     }
 }

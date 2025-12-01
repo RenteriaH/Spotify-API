@@ -2,6 +2,7 @@ package com.example.spotify_api.screens
 
 import android.graphics.drawable.BitmapDrawable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -28,6 +29,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.spotify_api.model.Album
 import com.example.spotify_api.model.SimplifiedTrack
+import com.example.spotify_api.navigation.Routes
 import com.example.spotify_api.viewModel.AlbumDetailViewModel
 import com.example.spotify_api.viewModel.AlbumState
 import java.util.concurrent.TimeUnit
@@ -75,7 +77,7 @@ fun AlbumDetailScreen(
             )
 
             Box(modifier = Modifier.fillMaxSize().background(gradientBrush)) {
-                AlbumDetailContent(album = state.album)
+                AlbumDetailContent(album = state.album, navController = navController)
             }
         }
         is AlbumState.Error -> {
@@ -87,7 +89,7 @@ fun AlbumDetailScreen(
 }
 
 @Composable
-fun AlbumDetailContent(album: Album) {
+fun AlbumDetailContent(album: Album, navController: NavController) { // Se añade NavController
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 32.dp)
@@ -100,7 +102,6 @@ fun AlbumDetailContent(album: Album) {
                     .padding(top = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // ¡AÑADIDO! Box para contener la imagen y el degradado.
                 Box(modifier = Modifier.size(250.dp)) {
                     AsyncImage(
                         model = album.images.firstOrNull()?.url,
@@ -108,7 +109,6 @@ fun AlbumDetailContent(album: Album) {
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
-                    // El velo de degradado que se superpone a la imagen.
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -124,11 +124,34 @@ fun AlbumDetailContent(album: Album) {
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(album.name, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = Color.White)
-                Text(
-                    text = "${album.artists.firstOrNull()?.name ?: "Artista Desconocido"} • ${album.releaseDate.substringBefore('-')}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.LightGray
-                )
+
+                // --- ¡CAMBIO AQUÍ! ---
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    val artist = album.artists.firstOrNull()
+                    if (artist != null) {
+                        Text(
+                            text = artist.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold, // Un poco más de énfasis
+                            color = Color.White, // Blanco para que se vea más clicable
+                            modifier = Modifier.clickable { // Acción de clic
+                                navController.navigate(Routes.ArtistDetail.createRoute(artist.id))
+                            }
+                        )
+                        Text(
+                            text = " • ${album.releaseDate.substringBefore('-')}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.LightGray
+                        )
+                    } else {
+                        Text(
+                            text = "Artista Desconocido • ${album.releaseDate.substringBefore('-')}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.LightGray
+                        )
+                    }
+                }
+                // --- FIN DEL CAMBIO ---
             }
         }
 

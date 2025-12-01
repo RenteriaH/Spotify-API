@@ -26,6 +26,7 @@ import com.example.spotify_api.model.SimplifiedAlbum
 import com.example.spotify_api.model.Track
 import com.example.spotify_api.navigation.Routes
 import com.example.spotify_api.ui.AlbumGridItem
+import com.example.spotify_api.utils.formatNumberWithCommas
 import com.example.spotify_api.viewModel.ArtistDetailState
 import com.example.spotify_api.viewModel.ArtistDetailViewModel
 
@@ -114,7 +115,9 @@ fun ArtistHeader(navController: NavController, artist: Artist) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(artist.name, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Text("${artist.followers?.total ?: 0} seguidores", style = MaterialTheme.typography.bodyLarge)
+        // --- ¡CAMBIO AQUÍ! ---
+        Text("${formatNumberWithCommas(artist.followers?.total)} seguidores", style = MaterialTheme.typography.bodyLarge)
+        // --- FIN DEL CAMBIO ---
         Spacer(modifier = Modifier.height(16.dp))
 
         FlowRow(

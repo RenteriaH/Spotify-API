@@ -10,7 +10,8 @@ import retrofit2.http.Query
 
 interface SpotifyApiService {
 
-    // ... (endpoints existentes de Perfil, Artistas, Catálogo, etc.)
+    // ... (endpoints existentes)
+
     @GET("me")
     suspend fun getUserProfile(@Header("Authorization") token: String): UserProfile
 
@@ -68,9 +69,8 @@ interface SpotifyApiService {
 
     @GET("browse/new-releases")
     suspend fun getNewReleases(
-        @Header("Authorization") token: String,
-        @Query("market") market: String = "ES"
-    ): SearchResponse
+        @Header("Authorization") token: String
+    ): NewReleasesResponse
 
     @GET("playlists/{playlist_id}")
     suspend fun getPlaylist(
@@ -109,7 +109,7 @@ interface SpotifyApiService {
         @Query("limit") limit: Int = 20
     ): CategoryPlaylistsResponse
 
-    // --- AUDIOBOOKS (¡NUEVO!) ---
+    // --- AUDIOBOOKS ---
 
     @GET("audiobooks/{id}")
     suspend fun getAudiobook(
@@ -133,4 +133,19 @@ interface SpotifyApiService {
         @Query("limit") limit: Int? = null,
         @Query("offset") offset: Int? = null
     ): PagingObject<SimplifiedChapter>
+
+    // --- HOME SCREEN ---
+
+    @GET("browse/featured-playlists")
+    suspend fun getFeaturedPlaylists(
+        @Header("Authorization") token: String,
+        @Query("limit") limit: Int = 20
+    ): FeaturedPlaylistsResponse
+
+    @GET("me/top/tracks")
+    suspend fun getMyTopTracks(
+        @Header("Authorization") token: String,
+        @Query("time_range") timeRange: String = "medium_term",
+        @Query("limit") limit: Int = 20
+    ): PagingObject<Track>
 }

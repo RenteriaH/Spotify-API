@@ -13,12 +13,12 @@ data class Playlist(
     val owner: PlaylistOwner,
     val images: List<Image>,
     @SerializedName("external_urls") val externalUrls: ExternalUrls,
-    // ¡CORREGIDO! El objeto tracks ahora contiene un objeto de paginación de PlaylistTrack.
     val tracks: PagingObject<PlaylistTrack>,
     val uri: String,
     val type: String,
     @SerializedName("snapshot_id") val snapshotId: String,
-    val public: Boolean
+    val public: Boolean,
+    val followers: Followers
 )
 
 /**
@@ -32,6 +32,9 @@ data class PlaylistOwner(
 )
 
 /**
+ * Modelo para el objeto de seguidores, que contiene el número total.
+ */
+/**
  * Modelo para la respuesta de una búsqueda de playlists.
  */
 data class PlaylistSearchResult(
@@ -44,15 +47,22 @@ data class PlaylistSearchResult(
 )
 
 /**
- * ¡AÑADIDO! Este es el "envoltorio" para cada canción en una playlist.
- * Contiene la información de la canción en la propiedad `track`.
+ * Contenedor para cada canción en una playlist.
  */
 data class PlaylistTrack(
     @SerializedName("added_at") val addedAt: String?,
     @SerializedName("added_by") val addedBy: UserProfile?,
+    // --- ¡ERROR CORREGIDO AQUÍ! ---
     @SerializedName("is_local") val isLocal: Boolean,
-    // La canción en sí puede ser nula si no está disponible.
     val track: Track?
+)
+
+/**
+ * Objeto de respuesta para la petición de playlists destacadas.
+ */
+data class FeaturedPlaylistsResponse(
+    val message: String,
+    val playlists: PlaylistSearchResult
 )
 
 /**

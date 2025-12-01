@@ -9,8 +9,7 @@ data class SearchResponse(
     val artists: ArtistSearchResult? = null,
     val playlists: PlaylistSearchResult? = null,
     val tracks: TrackSearchResult? = null,
-    // ¡AÑADIDO! La respuesta de búsqueda ahora puede contener audiolibros.
-    val audiobooks: AudiobookSearchResult? = null 
+    val audiobooks: AudiobookSearchResult? = null
 )
 
 data class AlbumSearchResult(
@@ -27,8 +26,6 @@ data class TrackSearchResult(
     val items: List<Track>,
     val limit: Int, val next: String?, val offset: Int, val previous: String?, val total: Int
 )
-
-// ¡AÑADIDO! El objeto que contiene los resultados de una búsqueda de audiolibros.
 
 data class AudiobookSearchResult(
     val items: List<SimplifiedAudiobook>,

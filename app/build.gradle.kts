@@ -1,9 +1,9 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    id("kotlin-kapt")
+    alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.kotlin.compose)
-    id("com.google.dagger.hilt.android")
+    alias(libs.plugins.google.dagger.hilt.android)
 }
 
 android {
@@ -54,9 +54,9 @@ dependencies {
     implementation(libs.androidx.compose.material3)
 
     // Hilt
-    implementation("com.google.dagger:hilt-android:2.51.1")
-    kapt("com.google.dagger:hilt-compiler:2.51.1")
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
 
     // Retrofit
     implementation(libs.retrofit)
@@ -70,3 +70,5 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
+
+// Force Gradle sync to invalidate caches

@@ -1,6 +1,5 @@
 package com.example.spotify_api.di
 
-import com.example.spotify_api.api.ApiConstants
 import com.example.spotify_api.api.AuthApiService
 import com.example.spotify_api.api.SpotifyApiService
 import com.example.spotify_api.data.SpotifyAuthManager
@@ -22,7 +21,8 @@ object NetworkModule {
     @Singleton
     @Named("SpotifyApiRetrofit")
     fun provideSpotifyApiRetrofit(): Retrofit = Retrofit.Builder()
-        .baseUrl(ApiConstants.API_BASE_URL)
+        // ¡CORRECCIÓN DEFINITIVA! Hardcodeando la URL para eliminar cualquier duda.
+        .baseUrl("https://api.spotify.com/v1/")
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
@@ -30,7 +30,8 @@ object NetworkModule {
     @Singleton
     @Named("AuthApiRetrofit")
     fun provideAuthApiRetrofit(): Retrofit = Retrofit.Builder()
-        .baseUrl(ApiConstants.ACCOUNTS_BASE_URL)
+        // ¡CORRECCIÓN DEFINITIVA! Hardcodeando la URL para eliminar cualquier duda.
+        .baseUrl("https://accounts.spotify.com/")
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 

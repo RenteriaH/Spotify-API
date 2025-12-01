@@ -14,9 +14,9 @@ import com.example.spotify_api.screens.artist.ArtistDetailScreen
 import com.example.spotify_api.screens.audiobook.AudiobookDetailScreen
 import com.example.spotify_api.screens.category.CategoryPlaylistsScreen
 import com.example.spotify_api.screens.playlist.PlaylistDetailScreen
+import com.example.spotify_api.ui.HomeScreen
 import com.example.spotify_api.ui.LoginScreen
 import com.example.spotify_api.ui.MainScreen
-import com.example.spotify_api.ui.NewReleasesScreen
 import com.example.spotify_api.ui.SearchScreen
 
 @Composable
@@ -33,18 +33,16 @@ fun NavManager() {
     }
 }
 
-// Este NavGraph contiene todas las pantallas que se muestran *después* del login.
-// Se aloja dentro del Scaffold de MainScreen, por lo que la BottomBar siempre estará visible.
 @Composable
 fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
     NavHost(navController, startDestination = BottomBarScreen.Home.route, modifier = modifier) {
 
         // --- Pantallas de la Barra de Navegación ---
         composable(BottomBarScreen.Home.route) {
-            NewReleasesScreen(navController = navController)
+            HomeScreen(navController = navController)
         }
         composable(
-            route = Routes.Search.route, 
+            route = Routes.Search.route,
             arguments = listOf(navArgument("query") { type = NavType.StringType; nullable = true })
         ) {
             SearchScreen(navController = navController)
@@ -84,7 +82,7 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
             route = Routes.AudiobookDetail.route,
             arguments = listOf(navArgument("audiobookId") { type = NavType.StringType })
         ) {
-            AudiobookDetailScreen() // Esta pantalla no necesita el NavController
+            AudiobookDetailScreen()
         }
 
         composable(
