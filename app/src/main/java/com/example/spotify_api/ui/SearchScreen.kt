@@ -39,11 +39,12 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel = hilt
     val screenState by viewModel.screenState
     val selectedCategory by viewModel.selectedCategory
 
-    Column(modifier = Modifier.fillMaxSize().padding(top = 16.dp)) {
+    Column(modifier = Modifier.fillMaxSize()) { 
+        Spacer(modifier = Modifier.height(16.dp)) 
         TextField(
             value = searchText,
             onValueChange = viewModel::onSearchTextChanged,
-            label = { Text("Busca artistas, álbumes, etc.") },
+            label = { Text("Búsqueda.") },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             trailingIcon = {
                 if (searchText.isNotBlank()) {
@@ -57,32 +58,30 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel = hilt
         Spacer(modifier = Modifier.height(16.dp))
 
         if (searchText.isNotBlank()) {
-            val categories = listOf("artist", "album", "playlist", "audiobook")
+            // Lista de botones que el usuario puede seleccionar. 'track' no está aquí.
+            val userSelectableCategories = listOf("artist", "album", "playlist", "audiobook")
 
-            // ¡CORREGIDO! Se usa LazyRow cuando no hay filtro, y Row cuando sí lo hay.
-            if (selectedCategory != "track") {
-                // Si hay un filtro activo, muestra solo ese botón en una Row normal.
-                Row(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    CategoryButton(
-                        label = selectedCategory.replaceFirstChar { it.titlecase() },
-                        isSelected = true,
-                        onClick = { viewModel.onCategorySelected(selectedCategory) } // Al pulsarlo, se deselecciona
-                    )
-                }
+            // --- ¡LÓGICA DE BOTONES CORREGIDA! ---
+            val categoriesToShow = if (selectedCategory in userSelectableCategories) {
+                // Si el usuario ha seleccionado una categoría, muestra solo esa.
+                listOf(selectedCategory!!)
             } else {
-                // Si no hay filtro, muestra todos en una LazyRow deslizable.
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp)
-                ) {
-                    items(categories) { category ->
-                        CategoryButton(
-                            label = category.replaceFirstChar { it.titlecase() },
-                            isSelected = false,
-                            onClick = { viewModel.onCategorySelected(category) }
-                        )
-                    }
+                // Si no (búsqueda por defecto de tracks o ninguna), muestra todas.
+                userSelectableCategories
+            }
+
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                // Centra el botón si solo hay uno.
+                horizontalArrangement = if (categoriesToShow.size == 1) Arrangement.Center else Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp)
+            ) {
+                items(categoriesToShow) { category ->
+                    CategoryButton(
+                        label = category.replaceFirstChar { it.titlecase() },
+                        isSelected = selectedCategory == category,
+                        onClick = { viewModel.onCategorySelected(category) }
+                    )
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -96,7 +95,13 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel = hilt
                     Column {
                         Text("Explorar todo", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(8.dp))
-                        LazyVerticalGrid(columns = GridCells.Fixed(2), modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            contentPadding = PaddingValues(bottom = 80.dp)
+                        ) {
                             items(state.categories) { category ->
                                 CategoryCard(category) {
                                     navController.navigate(Routes.CategoryPlaylists.createRoute(category.id))
@@ -115,33 +120,42 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel = hilt
 
 @Composable
 fun SearchResultsContent(navController: NavController, result: SearchResult) {
+    val bottomPadding = PaddingValues(bottom = 80.dp)
     when (result) {
         is SearchResult.TrackResult -> {
-            LazyColumn(Modifier.fillMaxSize()) { items(result.tracks) { track -> TrackItem(track) } }
+            LazyColumn(Modifier.fillMaxSize(), contentPadding = bottomPadding) { 
+                items(result.tracks) { track -> 
+                    TrackItem(track) { 
+                        if (track.id != null) {
+                            navController.navigate(Routes.TrackDetail.createRoute(track.id))
+                        }
+                    }
+                }
+            }
         }
         is SearchResult.AlbumResult -> {
-            LazyVerticalGrid(columns = GridCells.Fixed(2), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            LazyVerticalGrid(columns = GridCells.Fixed(2), horizontalArrangement = Arrangement.spacedBy(4.dp), contentPadding = bottomPadding) {
                 items(result.albums) {
-                    album -> AlbumGridItem(album = album) { albumId -> navController.navigate(Routes.AlbumDetail.createRoute(albumId)) }
+                        album -> AlbumGridItem(album = album) { albumId -> navController.navigate(Routes.AlbumDetail.createRoute(albumId)) }
                 }
             }
         }
         is SearchResult.PlaylistResult -> {
-            LazyColumn(Modifier.fillMaxSize()) {
+            LazyColumn(Modifier.fillMaxSize(), contentPadding = bottomPadding) {
                 items(result.playlists.filterNotNull()) { playlist ->
                     PlaylistItem(playlist) { navController.navigate(Routes.PlaylistDetail.createRoute(playlist.id)) }
                 }
             }
         }
         is SearchResult.ArtistResult -> {
-            LazyVerticalGrid(columns = GridCells.Fixed(2), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            LazyVerticalGrid(columns = GridCells.Fixed(2), horizontalArrangement = Arrangement.spacedBy(4.dp), contentPadding = bottomPadding) {
                 items(result.artists) { artist ->
                     ArtistGridItem(artist) { artistId -> navController.navigate(Routes.ArtistDetail.createRoute(artistId)) }
                 }
             }
         }
         is SearchResult.AudiobookResult -> {
-            LazyVerticalGrid(columns = GridCells.Fixed(2), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            LazyVerticalGrid(columns = GridCells.Fixed(2), horizontalArrangement = Arrangement.spacedBy(4.dp), contentPadding = bottomPadding) {
                 items(result.audiobooks) { audiobook ->
                     AudiobookGridItem(audiobook) { audiobookId -> navController.navigate(Routes.AudiobookDetail.createRoute(audiobookId)) }
                 }
@@ -150,12 +164,12 @@ fun SearchResultsContent(navController: NavController, result: SearchResult) {
     }
 }
 
-// --- COMPONENTES DE LA INTERFAZ ---
 
 @Composable
 fun CategoryButton(label: String, isSelected: Boolean, onClick: () -> Unit) {
+    // --- ¡COLOR CORREGIDO A ROJO! ---
     val buttonColors = if (isSelected) {
-        ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
+        ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935), contentColor = Color.White)
     } else {
         ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurface)
     }
@@ -232,7 +246,7 @@ fun TrackItem(track: Track, onClick: () -> Unit = {}) {
 @Composable
 fun PlaylistItem(playlist: Playlist, onClick: () -> Unit = {}) {
     Row(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        AsyncImage(model = playlist.images.firstOrNull()?.url, contentDescription = "Portada de la playlist", modifier = Modifier.size(56.dp).clip(RoundedCornerShape(4.dp)), contentScale = ContentScale.Crop)
+        AsyncImage(model = playlist.images?.firstOrNull()?.url, contentDescription = "Portada de la playlist", modifier = Modifier.size(56.dp).clip(RoundedCornerShape(4.dp)), contentScale = ContentScale.Crop)
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(text = playlist.name, fontWeight = FontWeight.Bold, maxLines = 1)

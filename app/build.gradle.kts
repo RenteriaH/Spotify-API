@@ -42,6 +42,9 @@ android {
 }
 
 dependencies {
+    // --- ¡NUEVA DEPENDENCIA AÑADIDA! ---
+    implementation("androidx.compose.material:material-icons-extended")
+
     implementation("androidx.palette:palette-ktx:1.0.0")
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation(libs.androidx.core.ktx)

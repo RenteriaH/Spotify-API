@@ -2,13 +2,13 @@ package com.example.spotify_api.screens.playlist
 
 import android.graphics.drawable.BitmapDrawable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,19 +21,25 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import androidx.palette.graphics.Palette
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.spotify_api.model.Playlist
 import com.example.spotify_api.model.Track
+import com.example.spotify_api.navigation.Routes
 import com.example.spotify_api.utils.formatNumberWithCommas
 import com.example.spotify_api.viewModel.PlaylistDetailState
 import com.example.spotify_api.viewModel.PlaylistDetailViewModel
 import java.util.concurrent.TimeUnit
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlaylistDetailScreen(viewModel: PlaylistDetailViewModel = hiltViewModel()) {
+fun PlaylistDetailScreen(
+    navController: NavController, 
+    viewModel: PlaylistDetailViewModel = hiltViewModel()
+) {
     val state by viewModel.playlistState.collectAsState()
 
     var dominantColor by remember { mutableStateOf(Color.Black) }
@@ -46,7 +52,7 @@ fun PlaylistDetailScreen(viewModel: PlaylistDetailViewModel = hiltViewModel()) {
             }
         }
         is PlaylistDetailState.Success -> {
-            val imageUrl = currentState.playlist.images.firstOrNull()?.url
+            val imageUrl = currentState.playlist.images?.firstOrNull()?.url
 
             LaunchedEffect(imageUrl) {
                 if (imageUrl == null) {
@@ -72,8 +78,27 @@ fun PlaylistDetailScreen(viewModel: PlaylistDetailViewModel = hiltViewModel()) {
                 colors = listOf(dominantColor.copy(alpha = 0.5f), Color.Black)
             )
 
-            Box(modifier = Modifier.fillMaxSize().background(gradientBrush)) {
-                PlaylistDetailContent(playlist = currentState.playlist)
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = { Text("") },
+                        navigationIcon = {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Volver", tint = Color.White)
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent
+                        )
+                    )
+                },
+                containerColor = Color.Black
+            ) { paddingValues ->
+                // --- ¡CAMBIO AQUÍ! ---
+                // El padding del Scaffold se ignora para el fondo, pero se aplica a la LazyColumn.
+                Box(modifier = Modifier.fillMaxSize().background(gradientBrush)) {
+                    PlaylistDetailContent(playlist = currentState.playlist, navController = navController, topPadding = paddingValues.calculateTopPadding())
+                }
             }
         }
         is PlaylistDetailState.Error -> {
@@ -85,15 +110,19 @@ fun PlaylistDetailScreen(viewModel: PlaylistDetailViewModel = hiltViewModel()) {
 }
 
 @Composable
-fun PlaylistDetailContent(playlist: Playlist) {
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+fun PlaylistDetailContent(playlist: Playlist, navController: NavController, topPadding: androidx.compose.ui.unit.Dp) {
+    // --- ¡CAMBIO AQUÍ! ---
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(top = topPadding, bottom = 80.dp) // Espacio para TopBar y BottomBar
+    ) {
         item {
             PlaylistHeader(playlist = playlist)
         }
         item { HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), color = Color.White.copy(alpha = 0.1f)) }
-        itemsIndexed(playlist.tracks.items) { index, playlistTrackItem ->
+        itemsIndexed(playlist.tracks?.items ?: emptyList()) { index, playlistTrackItem ->
             playlistTrackItem.track?.let {
-                TrackListItem(track = it, index = index + 1)
+                TrackListItem(track = it, index = index + 1, navController = navController)
             }
         }
     }
@@ -104,30 +133,15 @@ fun PlaylistHeader(playlist: Playlist) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .padding(top = 24.dp),
+            .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(modifier = Modifier.size(250.dp)) {
-            AsyncImage(
-                model = playlist.images.firstOrNull()?.url,
-                contentDescription = "Portada de la playlist",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colorStops = arrayOf(
-                                0.5f to Color.Transparent,
-                                1f to Color.Black
-                            )
-                        )
-                    )
-            )
-        }
+        AsyncImage(
+            model = playlist.images?.firstOrNull()?.url,
+            contentDescription = "Portada de la playlist",
+            modifier = Modifier.size(250.dp),
+            contentScale = ContentScale.Crop
+        )
         Spacer(modifier = Modifier.height(16.dp))
         Text(playlist.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Color.White)
         playlist.description?.let {
@@ -146,22 +160,25 @@ fun PlaylistHeader(playlist: Playlist) {
                 color = Color.LightGray
             )
         }
-        // --- ¡CAMBIO AQUÍ! ---
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = "${formatNumberWithCommas(playlist.followers.total)} seguidores",
             style = MaterialTheme.typography.bodySmall,
             color = Color.LightGray
         )
-        // --- FIN DEL CAMBIO ---
     }
 }
 
 @Composable
-fun TrackListItem(track: Track, index: Int) {
+fun TrackListItem(track: Track, index: Int, navController: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { 
+                if (track.id != null) { 
+                    navController.navigate(Routes.TrackDetail.createRoute(track.id))
+                }
+            }
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

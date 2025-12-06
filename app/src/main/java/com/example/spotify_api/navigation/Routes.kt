@@ -4,23 +4,23 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.ui.graphics.vector.ImageVector
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
-// Define las rutas que SÍ aparecen en la barra de navegación inferior.
 sealed class BottomBarScreen(val route: String, val title: String, val icon: ImageVector) {
     object Home : BottomBarScreen("home", "Home", Icons.Default.Home)
     object Search : BottomBarScreen("search", "Search", Icons.Default.Search)
+    // --- ¡NUEVA PANTALLA AÑADIDA! ---
+    object Library : BottomBarScreen("library", "Library", Icons.Default.VideoLibrary)
     object Profile : BottomBarScreen("profile", "Profile", Icons.Default.Person)
 }
 
-// Define TODAS las rutas de la aplicación.
 sealed class Routes(val route: String) {
     object Login : Routes("login")
-    object Main : Routes("main") // Pantalla principal que contendrá la barra de navegación
+    object Main : Routes("main") 
 
-    // Rutas de la barra inferior
     object Home : Routes(BottomBarScreen.Home.route)
     object Search : Routes("search?query={query}") {
         fun createRoute(query: String? = null): String {
@@ -32,9 +32,10 @@ sealed class Routes(val route: String) {
             }
         }
     }
+    // --- ¡NUEVA RUTA AÑADIDA! ---
+    object Library : Routes(BottomBarScreen.Library.route)
     object Profile : Routes(BottomBarScreen.Profile.route)
 
-    // Rutas de detalle (sin barra inferior)
     object AlbumDetail : Routes("album_detail/{albumId}") {
         fun createRoute(albumId: String) = "album_detail/$albumId"
     }
@@ -49,5 +50,8 @@ sealed class Routes(val route: String) {
     }
     object AudiobookDetail : Routes("audiobook_detail/{audiobookId}") {
         fun createRoute(audiobookId: String) = "audiobook_detail/$audiobookId"
+    }
+    object TrackDetail : Routes("track_detail/{trackId}") {
+        fun createRoute(trackId: String) = "track_detail/$trackId"
     }
 }

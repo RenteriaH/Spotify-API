@@ -9,11 +9,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.spotify_api.screens.AlbumDetailScreen
+import com.example.spotify_api.screens.LibraryScreen
 import com.example.spotify_api.screens.ProfileScreen
 import com.example.spotify_api.screens.artist.ArtistDetailScreen
 import com.example.spotify_api.screens.audiobook.AudiobookDetailScreen
 import com.example.spotify_api.screens.category.CategoryPlaylistsScreen
 import com.example.spotify_api.screens.playlist.PlaylistDetailScreen
+import com.example.spotify_api.screens.track.TrackDetailScreen
 import com.example.spotify_api.ui.HomeScreen
 import com.example.spotify_api.ui.LoginScreen
 import com.example.spotify_api.ui.MainScreen
@@ -47,6 +49,10 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
         ) {
             SearchScreen(navController = navController)
         }
+        // --- ¡NUEVA RUTA AÑADIDA! ---
+        composable(BottomBarScreen.Library.route) {
+            LibraryScreen(navController = navController)
+        }
         composable(BottomBarScreen.Profile.route) {
             ProfileScreen(navController = navController)
         }
@@ -75,7 +81,7 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
             route = Routes.PlaylistDetail.route,
             arguments = listOf(navArgument("playlistId") { type = NavType.StringType })
         ) {
-            PlaylistDetailScreen()
+            PlaylistDetailScreen(navController = navController)
         }
 
         composable(
@@ -90,6 +96,13 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
             arguments = listOf(navArgument("categoryId") { type = NavType.StringType })
         ) {
             CategoryPlaylistsScreen(navController = navController)
+        }
+        
+        composable(
+            route = Routes.TrackDetail.route,
+            arguments = listOf(navArgument("trackId") { type = NavType.StringType })
+        ) {
+            TrackDetailScreen(navController = navController)
         }
     }
 }

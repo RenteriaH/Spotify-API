@@ -11,14 +11,14 @@ data class Playlist(
     val collaborative: Boolean,
     val description: String?,
     val owner: PlaylistOwner,
-    val images: List<Image>,
+    val images: List<Image>?,
     @SerializedName("external_urls") val externalUrls: ExternalUrls,
-    val tracks: PagingObject<PlaylistTrack>,
+    val tracks: PagingObject<PlaylistTrack>?,
     val uri: String,
     val type: String,
     @SerializedName("snapshot_id") val snapshotId: String,
     val public: Boolean,
-    val followers: Followers
+    val followers: Followers // Esta referencia ahora usará la clase de Album.kt
 )
 
 /**
@@ -31,9 +31,6 @@ data class PlaylistOwner(
     val uri: String
 )
 
-/**
- * Modelo para el objeto de seguidores, que contiene el número total.
- */
 /**
  * Modelo para la respuesta de una búsqueda de playlists.
  */
@@ -52,7 +49,6 @@ data class PlaylistSearchResult(
 data class PlaylistTrack(
     @SerializedName("added_at") val addedAt: String?,
     @SerializedName("added_by") val addedBy: UserProfile?,
-    // --- ¡ERROR CORREGIDO AQUÍ! ---
     @SerializedName("is_local") val isLocal: Boolean,
     val track: Track?
 )
@@ -76,4 +72,10 @@ data class PagingObject<T>(
     val offset: Int,
     val previous: String?,
     val total: Int
+)
+
+// --- ¡NUEVO MODELO AÑADIDO! ---
+data class PlayHistoryObject(
+    val track: Track,
+    @SerializedName("played_at") val playedAt: String
 )

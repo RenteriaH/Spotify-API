@@ -58,7 +58,7 @@ class SearchViewModel @Inject constructor(
         searchJob?.cancel()
 
         if (newText.isBlank()) {
-            _selectedCategory.value = "track"
+            _selectedCategory.value = "track" 
             fetchCategories()
         } else {
             performSearch(category = _selectedCategory.value)
@@ -66,7 +66,7 @@ class SearchViewModel @Inject constructor(
     }
 
     fun onCategorySelected(category: String) {
-        // ¡CORREGIDO! Si se pulsa la misma categoría, se vuelve a "track" (deselección).
+        // Lógica simplificada: si la categoría es la misma, la deselecciona (vuelve a track).
         val newCategory = if (_selectedCategory.value == category) "track" else category
         _selectedCategory.value = newCategory
         performSearch(category = newCategory)

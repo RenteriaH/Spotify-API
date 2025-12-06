@@ -6,10 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +33,7 @@ import com.example.spotify_api.viewModel.AlbumDetailViewModel
 import com.example.spotify_api.viewModel.AlbumState
 import java.util.concurrent.TimeUnit
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlbumDetailScreen(
     navController: NavController,
@@ -76,8 +76,25 @@ fun AlbumDetailScreen(
                 colors = listOf(dominantColor.copy(alpha = 0.5f), Color.Black)
             )
 
-            Box(modifier = Modifier.fillMaxSize().background(gradientBrush)) {
-                AlbumDetailContent(album = state.album, navController = navController)
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = { Text("") }, 
+                        navigationIcon = {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Volver", tint = Color.White)
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent
+                        )
+                    )
+                },
+                containerColor = Color.Black 
+            ) { paddingValues ->
+                Box(modifier = Modifier.fillMaxSize().background(gradientBrush).padding(paddingValues)) {
+                    AlbumDetailContent(album = state.album, navController = navController)
+                }
             }
         }
         is AlbumState.Error -> {
@@ -89,7 +106,7 @@ fun AlbumDetailScreen(
 }
 
 @Composable
-fun AlbumDetailContent(album: Album, navController: NavController) { // Se añade NavController
+fun AlbumDetailContent(album: Album, navController: NavController) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 32.dp)
@@ -98,45 +115,27 @@ fun AlbumDetailContent(album: Album, navController: NavController) { // Se añad
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 24.dp),
+                    .padding(horizontal = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(modifier = Modifier.size(250.dp)) {
-                    AsyncImage(
-                        model = album.images.firstOrNull()?.url,
-                        contentDescription = "Portada del álbum",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colorStops = arrayOf(
-                                        0.5f to Color.Transparent,
-                                        1f to Color.Black
-                                    )
-                                )
-                            )
-                    )
-                }
+                AsyncImage(
+                    model = album.images.firstOrNull()?.url,
+                    contentDescription = "Portada del álbum",
+                    modifier = Modifier.size(250.dp),
+                    contentScale = ContentScale.Crop
+                )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(album.name, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = Color.White)
 
-                // --- ¡CAMBIO AQUÍ! ---
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     val artist = album.artists.firstOrNull()
                     if (artist != null) {
                         Text(
                             text = artist.name,
                             style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold, // Un poco más de énfasis
-                            color = Color.White, // Blanco para que se vea más clicable
-                            modifier = Modifier.clickable { // Acción de clic
-                                navController.navigate(Routes.ArtistDetail.createRoute(artist.id))
-                            }
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White,
+                            modifier = Modifier.clickable { navController.navigate(Routes.ArtistDetail.createRoute(artist.id)) }
                         )
                         Text(
                             text = " • ${album.releaseDate.substringBefore('-')}",
@@ -151,23 +150,25 @@ fun AlbumDetailContent(album: Album, navController: NavController) { // Se añad
                         )
                     }
                 }
-                // --- FIN DEL CAMBIO ---
             }
         }
 
         item { HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), color = Color.White.copy(alpha = 0.1f)) }
 
         itemsIndexed(album.tracks?.items ?: emptyList()) { index, track ->
-            TrackRow(track = track, index = index + 1)
+            TrackRow(track = track, index = index + 1, navController = navController)
         }
     }
 }
 
 @Composable
-fun TrackRow(track: SimplifiedTrack, index: Int) {
+fun TrackRow(track: SimplifiedTrack, index: Int, navController: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { 
+                navController.navigate(Routes.TrackDetail.createRoute(track.id))
+            }
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

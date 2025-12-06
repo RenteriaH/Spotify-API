@@ -93,6 +93,11 @@ data class Track(
 
 // --- Modelos Simplificados y Auxiliares ---
 
+data class SavedAlbum(
+    @SerializedName("added_at") val addedAt: String,
+    val album: Album
+)
+
 data class SimplifiedAlbum(
     @SerializedName("album_type") val albumType: String,
     @SerializedName("total_tracks") val totalTracks: Int,

@@ -11,14 +11,15 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
+// --- ¡COLORES ACTUALIZADOS A ROJO! ---
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
+    primary = AppRedLight, // Rojo para el tema oscuro
     secondary = PurpleGrey80,
     tertiary = Pink80
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
+    primary = AppRed, // Rojo para el tema claro
     secondary = PurpleGrey40,
     tertiary = Pink40
 

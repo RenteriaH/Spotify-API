@@ -1,5 +1,6 @@
 package com.example.spotify_api.screens.artist
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -7,6 +8,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -14,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -30,34 +34,51 @@ import com.example.spotify_api.utils.formatNumberWithCommas
 import com.example.spotify_api.viewModel.ArtistDetailState
 import com.example.spotify_api.viewModel.ArtistDetailViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArtistDetailScreen(
-    navController: NavController, // Se añade el NavController para la navegación.
+    navController: NavController, 
     onAlbumClick: (String) -> Unit,
     viewModel: ArtistDetailViewModel = hiltViewModel()
 ) {
     val state by viewModel.artistDetailState.collectAsState()
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        when (val currentState = state) {
-            is ArtistDetailState.Loading -> {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-            }
-            is ArtistDetailState.Success -> {
-                ArtistDetailContent(
-                    navController = navController,
-                    artist = currentState.artist,
-                    topTracks = currentState.topTracks,
-                    albums = currentState.albums,
-                    onAlbumClick = onAlbumClick
-                )
-            }
-            is ArtistDetailState.Error -> {
-                Text(text = currentState.message, modifier = Modifier.align(Alignment.Center))
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        // --- ¡CAMBIO DE ICONO AQUÍ! ---
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Volver", tint = MaterialTheme.colorScheme.onSurface)
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            when (val currentState = state) {
+                is ArtistDetailState.Loading -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+                is ArtistDetailState.Success -> {
+                    ArtistDetailContent(
+                        navController = navController,
+                        artist = currentState.artist,
+                        topTracks = currentState.topTracks,
+                        albums = currentState.albums,
+                        onAlbumClick = onAlbumClick
+                    )
+                }
+                is ArtistDetailState.Error -> {
+                    Text(text = currentState.message, modifier = Modifier.align(Alignment.Center))
+                }
             }
         }
     }
 }
+
+// El resto del archivo permanece igual...
 
 @Composable
 fun ArtistDetailContent(
@@ -78,7 +99,7 @@ fun ArtistDetailContent(
             Spacer(modifier = Modifier.height(8.dp))
         }
         itemsIndexed(topTracks) { index, track ->
-            TopTrackItem(track = track, trackNumber = index + 1)
+            TopTrackItem(navController = navController, track = track, trackNumber = index + 1)
         }
 
         item {
@@ -89,13 +110,12 @@ fun ArtistDetailContent(
         item {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
-                modifier = Modifier.height(600.dp), // Altura fija para que el LazyColumn pueda scrollar
+                modifier = Modifier.height(600.dp), 
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(top = 8.dp)
             ) {
                 items(albums) { album ->
-                    // ¡CORREGIDO! Se le pasa el SimplifiedAlbum directamente.
                     AlbumGridItem(album = album, onAlbumClick = onAlbumClick)
                 }
             }
@@ -115,9 +135,7 @@ fun ArtistHeader(navController: NavController, artist: Artist) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(artist.name, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        // --- ¡CAMBIO AQUÍ! ---
         Text("${formatNumberWithCommas(artist.followers?.total)} seguidores", style = MaterialTheme.typography.bodyLarge)
-        // --- FIN DEL CAMBIO ---
         Spacer(modifier = Modifier.height(16.dp))
 
         FlowRow(
@@ -137,9 +155,12 @@ fun ArtistHeader(navController: NavController, artist: Artist) {
 }
 
 @Composable
-fun TopTrackItem(track: Track, trackNumber: Int) {
+fun TopTrackItem(navController: NavController, track: Track, trackNumber: Int) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { navController.navigate(Routes.TrackDetail.createRoute(track.id)) }
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text("$trackNumber", modifier = Modifier.width(24.dp), style = MaterialTheme.typography.bodyLarge)

@@ -3,9 +3,7 @@ package com.example.spotify_api.viewModel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.spotify_api.model.Album
-import com.example.spotify_api.model.Playlist
-import com.example.spotify_api.model.Track
+import com.example.spotify_api.model.*
 import com.example.spotify_api.repository.SpotifyRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
@@ -13,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
+import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
@@ -31,11 +30,20 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             _homeState.value = HomeState.Loading
 
-            // supervisorScope asegura que el fallo de una corrutina hija (un async) no cancele a las demás.
             supervisorScope {
+                val userProfileDeferred = async { repository.getUserProfile() }
                 val newReleasesDeferred = async { repository.getNewReleases() }
-                val featuredPlaylistsDeferred = async { repository.getFeaturedPlaylists() }
+                val topArtistsDeferred = async { repository.getTopArtists() }
                 val topTracksDeferred = async { repository.getMyTopTracks() }
+                val myPlaylistsDeferred = async { repository.getMyPlaylists(limit = 8) }
+                val recentlyPlayedDeferred = async { repository.getRecentlyPlayed(limit = 10) }
+
+                val userProfile = try {
+                    userProfileDeferred.await()
+                } catch (e: Exception) {
+                    Log.e("HomeViewModel", "Error fetching user profile", e)
+                    null
+                }
 
                 val albums = try {
                     newReleasesDeferred.await().albums.items
@@ -44,11 +52,11 @@ class HomeViewModel @Inject constructor(
                     emptyList<Album>()
                 }
 
-                val playlists = try {
-                    featuredPlaylistsDeferred.await().playlists.items
+                val artists = try {
+                    topArtistsDeferred.await().items
                 } catch (e: Exception) {
-                    Log.e("HomeViewModel", "Error fetching featured playlists", e)
-                    emptyList<Playlist>()
+                    Log.e("HomeViewModel", "Error fetching top artists", e)
+                    emptyList<Artist>()
                 }
 
                 val tracks = try {
@@ -58,9 +66,30 @@ class HomeViewModel @Inject constructor(
                     emptyList<Track>()
                 }
 
-                // Emite el estado de éxito. La app ya no se cerrará y mostrará los datos que sí se hayan podido cargar.
-                _homeState.value = HomeState.Success(albums, playlists, tracks)
+                val playlists = try {
+                    myPlaylistsDeferred.await().items
+                } catch (e: Exception) {
+                    Log.e("HomeViewModel", "Error fetching my playlists", e)
+                    emptyList<Playlist>()
+                }
+
+                val recentlyPlayed = try {
+                    recentlyPlayedDeferred.await().items
+                } catch (e: Exception) {
+                    Log.e("HomeViewModel", "Error fetching recently played", e)
+                    emptyList<PlayHistoryObject>()
+                }
+
+                _homeState.value = HomeState.Success(userProfile, playlists, albums, artists, tracks, recentlyPlayed, getGreeting())
             }
+        }
+    }
+
+    private fun getGreeting(): String {
+        return when (Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
+            in 6..11 -> "Buenos días"
+            in 12..19 -> "Buenas tardes"
+            else -> "Buenas noches"
         }
     }
 }
@@ -68,9 +97,13 @@ class HomeViewModel @Inject constructor(
 sealed class HomeState {
     object Loading : HomeState()
     data class Success(
+        val userProfile: UserProfile?,
+        val myPlaylists: List<Playlist>,
         val newReleases: List<Album>,
-        val featuredPlaylists: List<Playlist>,
-        val topTracks: List<Track>
+        val topArtists: List<Artist>,
+        val topTracks: List<Track>,
+        val recentlyPlayed: List<PlayHistoryObject>,
+        val greeting: String
     ) : HomeState()
     data class Error(val message: String) : HomeState()
 }

@@ -103,11 +103,32 @@ class SpotifyRepository @Inject constructor(
 
     suspend fun getFeaturedPlaylists(): FeaturedPlaylistsResponse {
         val token = authManager.getBearerToken() ?: throw Exception("Token not found")
-        return spotifyApiService.getFeaturedPlaylists(token)
+        return spotifyApiService.getFeaturedPlaylists(token, locale = "es_ES")
     }
 
     suspend fun getMyTopTracks(): PagingObject<Track> {
         val token = authManager.getBearerToken() ?: throw Exception("Token not found")
         return spotifyApiService.getMyTopTracks(token)
+    }
+
+    suspend fun getTrack(trackId: String): Track {
+        val token = authManager.getBearerToken() ?: throw Exception("Token not found")
+        return spotifyApiService.getTrack(token, trackId)
+    }
+
+    suspend fun getMySavedAlbums(limit: Int = 50): PagingObject<SavedAlbum> {
+        val token = authManager.getBearerToken() ?: throw Exception("Token not found")
+        return spotifyApiService.getMySavedAlbums(token, limit)
+    }
+
+    suspend fun getMyPlaylists(limit: Int = 50): PagingObject<Playlist> {
+        val token = authManager.getBearerToken() ?: throw Exception("Token not found")
+        return spotifyApiService.getMyPlaylists(token, limit)
+    }
+
+    // --- ¡NUEVA FUNCIÓN AÑADIDA! ---
+    suspend fun getRecentlyPlayed(limit: Int = 20): PagingObject<PlayHistoryObject> {
+        val token = authManager.getBearerToken() ?: throw Exception("Token not found")
+        return spotifyApiService.getRecentlyPlayed(token, limit)
     }
 }

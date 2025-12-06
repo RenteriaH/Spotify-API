@@ -1,10 +1,15 @@
 package com.example.spotify_api.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -14,14 +19,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.spotify_api.model.Album
+import com.example.spotify_api.model.Artist
 import com.example.spotify_api.model.Playlist
 import com.example.spotify_api.model.Track
 import com.example.spotify_api.navigation.Routes
@@ -44,13 +52,60 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = hiltView
             }
         }
         is HomeState.Success -> {
-            LazyColumn(modifier = Modifier.fillMaxSize().padding(top = 16.dp)) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                // --- ¡CAMBIO AQUÍ! ---
+                contentPadding = PaddingValues(bottom = 80.dp) // Solo se necesita el padding inferior
+            ) {
+                // --- SALUDO ---
+                item {
+                    Text(
+                        text = currentState.greeting,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                }
+
+                // --- SECCIÓN DE PLAYLISTS ---
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        modifier = Modifier.height(240.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp)
+                    ) {
+                        items(currentState.myPlaylists) { playlist ->
+                            PlaylistGridItem(playlist = playlist) {
+                                navController.navigate(Routes.PlaylistDetail.createRoute(playlist.id))
+                            }
+                        }
+                    }
+                }
+
+                // --- SECCIÓN DE ESCUCHADO RECIENTEMENTE ---
+                item {
+                    CarouselSection(
+                        title = "Escuchado Recientemente",
+                        items = currentState.recentlyPlayed,
+                        itemContent = { playHistory ->
+                            TrackCarouselItem(track = playHistory.track) {
+                                navController.navigate(Routes.TrackDetail.createRoute(playHistory.track.id))
+                            }
+                        }
+                    )
+                }
+
                 item {
                     CarouselSection(
                         title = "Tus Canciones Favoritas",
                         items = currentState.topTracks,
                         itemContent = { track ->
-                            TrackCarouselItem(track = track) { /* TODO: Navegar al reproductor */ }
+                            TrackCarouselItem(track = track) {
+                                navController.navigate(Routes.TrackDetail.createRoute(track.id))
+                            }
                         }
                     )
                 }
@@ -67,11 +122,11 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = hiltView
                 }
                 item {
                     CarouselSection(
-                        title = "Playlists Destacadas",
-                        items = currentState.featuredPlaylists,
-                        itemContent = { playlist ->
-                            PlaylistCarouselItem(playlist = playlist) {
-                                navController.navigate(Routes.PlaylistDetail.createRoute(playlist.id))
+                        title = "Tus Artistas Favoritos",
+                        items = currentState.topArtists,
+                        itemContent = { artist ->
+                            ArtistCarouselItem(artist = artist) {
+                                navController.navigate(Routes.ArtistDetail.createRoute(artist.id))
                             }
                         }
                     )
@@ -103,6 +158,32 @@ fun <T> CarouselSection(title: String, items: List<T>, itemContent: @Composable 
 }
 
 @Composable
+fun PlaylistGridItem(playlist: Playlist, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .background(Color.DarkGray.copy(alpha = 0.3f), shape = RoundedCornerShape(8.dp))
+            .height(56.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            model = playlist.images?.firstOrNull()?.url,
+            contentDescription = "Portada de la playlist",
+            modifier = Modifier.size(56.dp).clip(RoundedCornerShape(topStart = 8.dp, bottomStart = 8.dp)),
+            contentScale = ContentScale.Crop
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = playlist.name,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(end = 8.dp)
+        )
+    }
+}
+
+@Composable
 fun AlbumCarouselItem(album: Album, onClick: () -> Unit) {
     Column(
         modifier = Modifier.width(140.dp).clickable(onClick = onClick),
@@ -121,19 +202,19 @@ fun AlbumCarouselItem(album: Album, onClick: () -> Unit) {
 }
 
 @Composable
-fun PlaylistCarouselItem(playlist: Playlist, onClick: () -> Unit) {
+fun ArtistCarouselItem(artist: Artist, onClick: () -> Unit) {
     Column(
         modifier = Modifier.width(140.dp).clickable(onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AsyncImage(
-            model = playlist.images.firstOrNull()?.url,
-            contentDescription = "Portada de la playlist",
-            modifier = Modifier.size(140.dp).clip(RoundedCornerShape(8.dp)),
+            model = artist.images?.firstOrNull()?.url,
+            contentDescription = "Foto del artista",
+            modifier = Modifier.size(140.dp).clip(CircleShape), // Foto circular
             contentScale = ContentScale.Crop
         )
         Spacer(modifier = Modifier.height(4.dp))
-        Text(text = playlist.name, fontWeight = FontWeight.SemiBold, maxLines = 1)
+        Text(text = artist.name, fontWeight = FontWeight.SemiBold, maxLines = 1)
     }
 }
 

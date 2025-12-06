@@ -1,15 +1,21 @@
 package com.example.spotify_api.ui
 
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -22,10 +28,17 @@ import com.example.spotify_api.navigation.NavGraph
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
+
     Scaffold(
         bottomBar = { BottomBar(navController = navController) }
     ) { innerPadding ->
-        NavGraph(navController = navController, modifier = Modifier.padding(innerPadding))
+        val paddingWithoutBottom = PaddingValues(
+            top = innerPadding.calculateTopPadding(),
+            start = innerPadding.calculateLeftPadding(LocalLayoutDirection.current),
+            end = innerPadding.calculateRightPadding(LocalLayoutDirection.current),
+            bottom = 0.dp
+        )
+        NavGraph(navController = navController, modifier = Modifier.padding(paddingWithoutBottom))
     }
 }
 
@@ -34,12 +47,17 @@ fun BottomBar(navController: NavHostController) {
     val screens = listOf(
         BottomBarScreen.Home,
         BottomBarScreen.Search,
+        BottomBarScreen.Library,
         BottomBarScreen.Profile
     )
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    NavigationBar {
+    NavigationBar(
+        // --- ¡CAMBIO AQUÍ! ---
+        modifier = Modifier.height(80.dp), // Reducimos la altura de la barra
+        containerColor = Color.Black.copy(alpha = 0.8f)
+    ) {
         screens.forEach { screen ->
             NavigationBarItem(
                 label = { Text(screen.title) },
@@ -53,7 +71,14 @@ fun BottomBar(navController: NavHostController) {
                         launchSingleTop = true
                         restoreState = true
                     }
-                }
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = Color.White,
+                    unselectedIconColor = Color.Gray,
+                    selectedTextColor = Color.White,
+                    unselectedTextColor = Color.Gray,
+                    indicatorColor = Color.Transparent
+                )
             )
         }
     }

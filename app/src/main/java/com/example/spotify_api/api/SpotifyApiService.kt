@@ -22,6 +22,19 @@ interface SpotifyApiService {
         @Query("limit") limit: Int = 20
     ): TopArtistsResponse
 
+    @GET("me/playlists")
+    suspend fun getMyPlaylists(
+        @Header("Authorization") token: String,
+        @Query("limit") limit: Int = 50
+    ): PagingObject<Playlist>
+
+    // --- ¡NUEVO ENDPOINT PARA HISTORIAL! ---
+    @GET("me/player/recently-played")
+    suspend fun getRecentlyPlayed(
+        @Header("Authorization") token: String,
+        @Query("limit") limit: Int = 20
+    ): PagingObject<PlayHistoryObject>
+
     @GET("artists/{id}")
     suspend fun getArtist(
         @Header("Authorization") token: String,
@@ -109,6 +122,12 @@ interface SpotifyApiService {
         @Query("limit") limit: Int = 20
     ): CategoryPlaylistsResponse
 
+    @GET("me/albums")
+    suspend fun getMySavedAlbums(
+        @Header("Authorization") token: String,
+        @Query("limit") limit: Int = 50
+    ): PagingObject<SavedAlbum>
+
     // --- AUDIOBOOKS ---
 
     @GET("audiobooks/{id}")
@@ -139,6 +158,7 @@ interface SpotifyApiService {
     @GET("browse/featured-playlists")
     suspend fun getFeaturedPlaylists(
         @Header("Authorization") token: String,
+        @Query("locale") locale: String?,
         @Query("limit") limit: Int = 20
     ): FeaturedPlaylistsResponse
 
@@ -148,4 +168,10 @@ interface SpotifyApiService {
         @Query("time_range") timeRange: String = "medium_term",
         @Query("limit") limit: Int = 20
     ): PagingObject<Track>
+
+    @GET("tracks/{id}")
+    suspend fun getTrack(
+        @Header("Authorization") token: String,
+        @Path("id") trackId: String
+    ): Track
 }
