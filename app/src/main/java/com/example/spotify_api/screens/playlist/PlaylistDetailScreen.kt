@@ -26,13 +26,13 @@ import androidx.palette.graphics.Palette
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.spotify_api.model.PlaylistItem
 import com.example.spotify_api.model.Playlist
-import com.example.spotify_api.model.Track
 import com.example.spotify_api.navigation.Routes
+import com.example.spotify_api.utils.formatDurationWithHours
 import com.example.spotify_api.utils.formatNumberWithCommas
 import com.example.spotify_api.viewModel.PlaylistDetailState
 import com.example.spotify_api.viewModel.PlaylistDetailViewModel
-import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,8 +94,6 @@ fun PlaylistDetailScreen(
                 },
                 containerColor = Color.Black
             ) { paddingValues ->
-                // --- ¡CAMBIO AQUÍ! ---
-                // El padding del Scaffold se ignora para el fondo, pero se aplica a la LazyColumn.
                 Box(modifier = Modifier.fillMaxSize().background(gradientBrush)) {
                     PlaylistDetailContent(playlist = currentState.playlist, navController = navController, topPadding = paddingValues.calculateTopPadding())
                 }
@@ -111,22 +109,27 @@ fun PlaylistDetailScreen(
 
 @Composable
 fun PlaylistDetailContent(playlist: Playlist, navController: NavController, topPadding: androidx.compose.ui.unit.Dp) {
-    // --- ¡CAMBIO AQUÍ! ---
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = topPadding, bottom = 80.dp) // Espacio para TopBar y BottomBar
+        contentPadding = PaddingValues(top = topPadding, bottom = 80.dp) 
     ) {
         item {
             PlaylistHeader(playlist = playlist)
         }
         item { HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), color = Color.White.copy(alpha = 0.1f)) }
-        itemsIndexed(playlist.tracks?.items ?: emptyList()) { index, playlistTrackItem ->
-            playlistTrackItem.track?.let {
-                TrackListItem(track = it, index = index + 1, navController = navController)
+        
+        itemsIndexed(playlist.tracks?.items ?: emptyList()) { index, playlistTrack ->
+            playlistTrack.track?.let { item ->
+                when (item.type) {
+                    "track" -> TrackPlaylistItem(item = item, index = index + 1, navController = navController)
+                    "episode" -> EpisodePlaylistItem(item = item, index = index + 1)
+                    else -> { /* No mostrar nada si el tipo no es reconocido */ }
+                }
             }
         }
     }
 }
+
 
 @Composable
 fun PlaylistHeader(playlist: Playlist) {
@@ -170,15 +173,11 @@ fun PlaylistHeader(playlist: Playlist) {
 }
 
 @Composable
-fun TrackListItem(track: Track, index: Int, navController: NavController) {
+fun TrackPlaylistItem(item: PlaylistItem, index: Int, navController: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { 
-                if (track.id != null) { 
-                    navController.navigate(Routes.TrackDetail.createRoute(track.id))
-                }
-            }
+            .clickable { navController.navigate(Routes.TrackDetail.createRoute(item.id)) }
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -186,14 +185,14 @@ fun TrackListItem(track: Track, index: Int, navController: NavController) {
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = track.name,
+                text = item.name,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 color = Color.White
             )
             Text(
-                text = track.artists.joinToString { it.name },
+                text = item.artists?.joinToString { it.name } ?: "",
                 fontSize = 14.sp,
                 color = Color.LightGray,
                 maxLines = 1,
@@ -204,15 +203,55 @@ fun TrackListItem(track: Track, index: Int, navController: NavController) {
         Spacer(modifier = Modifier.width(16.dp))
 
         Text(
-            text = formatDuration(track.durationMs),
+            text = formatDurationWithHours(item.durationMs),
             fontSize = 14.sp,
             color = Color.LightGray
         )
     }
 }
 
-private fun formatDuration(ms: Int): String {
-    val minutes = TimeUnit.MILLISECONDS.toMinutes(ms.toLong())
-    val seconds = TimeUnit.MILLISECONDS.toSeconds(ms.toLong()) - TimeUnit.MINUTES.toSeconds(minutes)
-    return String.format("%d:%02d", minutes, seconds)
+@Composable
+fun EpisodePlaylistItem(item: PlaylistItem, index: Int) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text("$index", modifier = Modifier.width(32.dp), color = Color.LightGray)
+        
+        AsyncImage(
+            model = item.images?.firstOrNull()?.url,
+            contentDescription = "Portada del episodio",
+            modifier = Modifier.size(56.dp),
+            contentScale = ContentScale.Crop
+        )
+        
+        Spacer(Modifier.width(8.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = item.name,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = Color.White
+            )
+            Text(
+                text = item.show?.name ?: "Podcast",
+                fontSize = 14.sp,
+                color = Color.LightGray,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Text(
+            text = formatDurationWithHours(item.durationMs),
+            fontSize = 14.sp,
+            color = Color.LightGray
+        )
+    }
 }

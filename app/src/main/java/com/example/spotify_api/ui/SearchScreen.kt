@@ -58,27 +58,28 @@ fun SearchScreen(navController: NavController, viewModel: SearchViewModel = hilt
         Spacer(modifier = Modifier.height(16.dp))
 
         if (searchText.isNotBlank()) {
-            // Lista de botones que el usuario puede seleccionar. 'track' no está aquí.
-            val userSelectableCategories = listOf("artist", "album", "playlist", "audiobook")
+            val userSelectableCategories = listOf("artist", "album", "playlist", "show", "audiobook")
 
-            // --- ¡LÓGICA DE BOTONES CORREGIDA! ---
             val categoriesToShow = if (selectedCategory in userSelectableCategories) {
-                // Si el usuario ha seleccionado una categoría, muestra solo esa.
                 listOf(selectedCategory!!)
             } else {
-                // Si no (búsqueda por defecto de tracks o ninguna), muestra todas.
                 userSelectableCategories
             }
 
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
-                // Centra el botón si solo hay uno.
                 horizontalArrangement = if (categoriesToShow.size == 1) Arrangement.Center else Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp)
             ) {
                 items(categoriesToShow) { category ->
+                    // --- ¡CAMBIO DE ETIQUETA! "Show" -> "Podcast" ---
+                    val buttonLabel = if (category == "show") {
+                        "Podcast"
+                    } else {
+                        category.replaceFirstChar { it.titlecase() }
+                    }
                     CategoryButton(
-                        label = category.replaceFirstChar { it.titlecase() },
+                        label = buttonLabel,
                         isSelected = selectedCategory == category,
                         onClick = { viewModel.onCategorySelected(category) }
                     )
@@ -161,13 +162,46 @@ fun SearchResultsContent(navController: NavController, result: SearchResult) {
                 }
             }
         }
+        is SearchResult.ShowResult -> {
+            LazyColumn(Modifier.fillMaxSize(), contentPadding = bottomPadding) {
+                items(result.shows) { show ->
+                    ShowListItem(show) { 
+                        navController.navigate(Routes.ShowDetail.createRoute(show.id))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ShowListItem(show: SimplifiedShow, onClick: () -> Unit = {}) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            model = show.images.firstOrNull()?.url,
+            contentDescription = "Portada del show",
+            modifier = Modifier
+                .size(56.dp)
+                .clip(RoundedCornerShape(4.dp)),
+            contentScale = ContentScale.Crop
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = show.name, fontWeight = FontWeight.Bold, maxLines = 1)
+            Text(text = show.publisher, fontSize = 14.sp, color = Color.Gray, maxLines = 1)
+        }
     }
 }
 
 
 @Composable
 fun CategoryButton(label: String, isSelected: Boolean, onClick: () -> Unit) {
-    // --- ¡COLOR CORREGIDO A ROJO! ---
     val buttonColors = if (isSelected) {
         ButtonDefaults.buttonColors(containerColor = Color(0xFFE53935), contentColor = Color.White)
     } else {

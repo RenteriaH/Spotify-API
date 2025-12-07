@@ -18,6 +18,7 @@ sealed class SearchResult {
     data class PlaylistResult(val playlists: List<Playlist>) : SearchResult()
     data class ArtistResult(val artists: List<Artist>) : SearchResult()
     data class AudiobookResult(val audiobooks: List<SimplifiedAudiobook>) : SearchResult()
+    data class ShowResult(val shows: List<SimplifiedShow>) : SearchResult() // ¡NUEVO!
 }
 
 sealed class SearchScreenState {
@@ -66,7 +67,6 @@ class SearchViewModel @Inject constructor(
     }
 
     fun onCategorySelected(category: String) {
-        // Lógica simplificada: si la categoría es la misma, la deselecciona (vuelve a track).
         val newCategory = if (_selectedCategory.value == category) "track" else category
         _selectedCategory.value = newCategory
         performSearch(category = newCategory)
@@ -107,6 +107,7 @@ class SearchViewModel @Inject constructor(
                     "playlist" -> SearchResult.PlaylistResult(response.playlists?.items?.filterNotNull() ?: emptyList())
                     "artist" -> SearchResult.ArtistResult(response.artists?.items?.filterNotNull() ?: emptyList())
                     "audiobook" -> SearchResult.AudiobookResult(response.audiobooks?.items?.filterNotNull() ?: emptyList())
+                    "show" -> SearchResult.ShowResult(response.shows?.items?.filterNotNull() ?: emptyList()) // ¡NUEVO!
                     else -> throw IllegalArgumentException("Categoría no soportada: $category")
                 }
                 _screenState.value = SearchScreenState.ShowSearchResults(searchResult, query)

@@ -1,7 +1,9 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.kapt)
+    // Kapt is now removed
+    // alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.dagger.hilt.android)
 }
@@ -42,7 +44,9 @@ android {
 }
 
 dependencies {
-    // --- ¡NUEVA DEPENDENCIA AÑADIDA! ---
+    // Splash Screen API
+    implementation("androidx.core:core-splashscreen:1.0.1")
+
     implementation("androidx.compose.material:material-icons-extended")
 
     implementation("androidx.palette:palette-ktx:1.0.0")
@@ -56,9 +60,9 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
 
-    // Hilt
+    // Hilt (now using KSP)
     implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
 
     // Retrofit
@@ -73,5 +77,3 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
-
-// Force Gradle sync to invalidate caches

@@ -18,7 +18,38 @@ data class Playlist(
     val type: String,
     @SerializedName("snapshot_id") val snapshotId: String,
     val public: Boolean,
-    val followers: Followers // Esta referencia ahora usará la clase de Album.kt
+    val followers: Followers
+)
+
+/**
+ * Un item dentro de una playlist, que puede ser una canción o un episodio.
+ * Gson poblará los campos que correspondan y dejará los otros como null.
+ */
+data class PlaylistItem(
+    // Campos comunes
+    val id: String,
+    val name: String,
+    val type: String, // "track" o "episode"
+    @SerializedName("duration_ms") val durationMs: Int,
+    val explicit: Boolean,
+
+    // Campos específicos de Track
+    val album: SimplifiedAlbum?,
+    val artists: List<Artist>?,
+
+    // Campos específicos de Episode
+    val images: List<Image>?,
+    val show: SimplifiedShow?
+)
+
+/**
+ * Contenedor para cada item en una playlist. El item puede ser una canción o un episodio.
+ */
+data class PlaylistTrack(
+    @SerializedName("added_at") val addedAt: String?,
+    @SerializedName("added_by") val addedBy: UserProfile?,
+    @SerializedName("is_local") val isLocal: Boolean,
+    val track: PlaylistItem? // MODIFICADO: Antes era Track?, ahora es PlaylistItem?
 )
 
 /**
@@ -41,16 +72,6 @@ data class PlaylistSearchResult(
     val offset: Int,
     val previous: String?,
     val total: Int
-)
-
-/**
- * Contenedor para cada canción en una playlist.
- */
-data class PlaylistTrack(
-    @SerializedName("added_at") val addedAt: String?,
-    @SerializedName("added_by") val addedBy: UserProfile?,
-    @SerializedName("is_local") val isLocal: Boolean,
-    val track: Track?
 )
 
 /**

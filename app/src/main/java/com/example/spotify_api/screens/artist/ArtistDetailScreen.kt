@@ -49,10 +49,10 @@ fun ArtistDetailScreen(
                 title = { Text("") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        // --- ¡CAMBIO DE ICONO AQUÍ! ---
                         Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Volver", tint = MaterialTheme.colorScheme.onSurface)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { paddingValues ->
@@ -78,8 +78,6 @@ fun ArtistDetailScreen(
     }
 }
 
-// El resto del archivo permanece igual...
-
 @Composable
 fun ArtistDetailContent(
     navController: NavController,
@@ -88,34 +86,33 @@ fun ArtistDetailContent(
     albums: List<SimplifiedAlbum>,
     onAlbumClick: (String) -> Unit
 ) {
-    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp)) {
+    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 80.dp)) {
         item {
             ArtistHeader(navController = navController, artist = artist)
             Spacer(modifier = Modifier.height(24.dp))
         }
 
         item {
-            Text("Populares", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text("Populares", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp))
             Spacer(modifier = Modifier.height(8.dp))
         }
-        itemsIndexed(topTracks) { index, track ->
-            TopTrackItem(navController = navController, track = track, trackNumber = index + 1)
+        itemsIndexed(topTracks, key = { _, track -> track.id }) { index, track ->
+            TopTrackItem(navController = navController, track = track, trackNumber = index + 1, modifier = Modifier.padding(horizontal = 16.dp))
         }
 
         item {
             Spacer(modifier = Modifier.height(24.dp))
-            Text("Discografía", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text("Discografía", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp))
             Spacer(modifier = Modifier.height(8.dp))
         }
         item {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
-                modifier = Modifier.height(600.dp), 
+                modifier = Modifier.height(600.dp).padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(top = 8.dp)
             ) {
-                items(albums) { album ->
+                items(albums, key = { it.id }) { album ->
                     AlbumGridItem(album = album, onAlbumClick = onAlbumClick)
                 }
             }
@@ -126,7 +123,7 @@ fun ArtistDetailContent(
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ArtistHeader(navController: NavController, artist: Artist) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         AsyncImage(
             model = artist.images?.firstOrNull()?.url,
             contentDescription = "Foto del artista",
@@ -155,9 +152,9 @@ fun ArtistHeader(navController: NavController, artist: Artist) {
 }
 
 @Composable
-fun TopTrackItem(navController: NavController, track: Track, trackNumber: Int) {
+fun TopTrackItem(navController: NavController, track: Track, trackNumber: Int, modifier: Modifier = Modifier) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable { navController.navigate(Routes.TrackDetail.createRoute(track.id)) }
             .padding(vertical = 8.dp),

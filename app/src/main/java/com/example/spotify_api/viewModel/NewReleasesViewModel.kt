@@ -31,26 +31,15 @@ class HomeViewModel @Inject constructor(
             _homeState.value = HomeState.Loading
 
             supervisorScope {
+                // ... (llamadas existentes)
+                val topArtistsDeferred = async { repository.getTopArtists(limit = 5) } // Limitamos para las semillas
+                val topTracksDeferred = async { repository.getMyTopTracks(limit = 5) } // Limitamos para las semillas
+                // ... (resto de llamadas)
                 val userProfileDeferred = async { repository.getUserProfile() }
                 val newReleasesDeferred = async { repository.getNewReleases() }
-                val topArtistsDeferred = async { repository.getTopArtists() }
-                val topTracksDeferred = async { repository.getMyTopTracks() }
                 val myPlaylistsDeferred = async { repository.getMyPlaylists(limit = 8) }
                 val recentlyPlayedDeferred = async { repository.getRecentlyPlayed(limit = 10) }
-
-                val userProfile = try {
-                    userProfileDeferred.await()
-                } catch (e: Exception) {
-                    Log.e("HomeViewModel", "Error fetching user profile", e)
-                    null
-                }
-
-                val albums = try {
-                    newReleasesDeferred.await().albums.items
-                } catch (e: Exception) {
-                    Log.e("HomeViewModel", "Error fetching new releases", e)
-                    emptyList<Album>()
-                }
+                val savedShowsDeferred = async { repository.getMySavedShows(limit = 20) }
 
                 val artists = try {
                     topArtistsDeferred.await().items
@@ -66,21 +55,40 @@ class HomeViewModel @Inject constructor(
                     emptyList<Track>()
                 }
 
-                val playlists = try {
-                    myPlaylistsDeferred.await().items
-                } catch (e: Exception) {
-                    Log.e("HomeViewModel", "Error fetching my playlists", e)
-                    emptyList<Playlist>()
+                // --- ¡NUEVA LÓGICA PARA RECOMENDACIONES! ---
+                val recommendations = if (artists.isNotEmpty() && tracks.isNotEmpty()) {
+                    val seedArtists = artists.take(2).joinToString(",") { it.id }
+                    val seedTracks = tracks.take(3).joinToString(",") { it.id }
+                    try {
+                        val recommendationsResponse = repository.getRecommendations(seedArtists, seedTracks)
+                        recommendationsResponse.tracks
+                    } catch (e: Exception) {
+                        Log.e("HomeViewModel", "Error fetching recommendations", e)
+                        emptyList<Track>()
+                    }
+                } else {
+                    emptyList<Track>()
                 }
 
-                val recentlyPlayed = try {
-                    recentlyPlayedDeferred.await().items
-                } catch (e: Exception) {
-                    Log.e("HomeViewModel", "Error fetching recently played", e)
-                    emptyList<PlayHistoryObject>()
-                }
+                // ... (resto de la obtención de datos)
+                val userProfile = try { userProfileDeferred.await() } catch (e: Exception) { null }
+                val albums = try { newReleasesDeferred.await().albums.items } catch (e: Exception) { emptyList<Album>() }
+                val playlists = try { myPlaylistsDeferred.await().items } catch (e: Exception) { emptyList<Playlist>() }
+                val recentlyPlayed = try { recentlyPlayedDeferred.await().items } catch (e: Exception) { emptyList<PlayHistoryObject>() }
+                val savedShows = try { savedShowsDeferred.await().items.map { it.show } } catch (e: Exception) { emptyList<SimplifiedShow>() }
 
-                _homeState.value = HomeState.Success(userProfile, playlists, albums, artists, tracks, recentlyPlayed, getGreeting())
+
+                _homeState.value = HomeState.Success(
+                    userProfile,
+                    playlists,
+                    albums,
+                    artists,
+                    tracks,
+                    recentlyPlayed,
+                    savedShows,
+                    recommendations, // <-- ¡NUEVA LISTA AÑADIDA!
+                    getGreeting()
+                )
             }
         }
     }
@@ -103,6 +111,9 @@ sealed class HomeState {
         val topArtists: List<Artist>,
         val topTracks: List<Track>,
         val recentlyPlayed: List<PlayHistoryObject>,
+        val savedShows: List<SimplifiedShow>,
+        // --- ¡NUEVO CAMPO! ---
+        val recommendations: List<Track>,
         val greeting: String
     ) : HomeState()
     data class Error(val message: String) : HomeState()

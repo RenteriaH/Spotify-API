@@ -1,5 +1,6 @@
 package com.example.spotify_api.viewModel
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -44,12 +45,12 @@ class ArtistDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _artistDetailState.value = ArtistDetailState.Loading
             try {
-                // Se lanzan las 3 peticiones en paralelo para optimizar la carga.
+                // Peticiones principales (si fallan, la pantalla muestra un error).
                 val artistDeferred = async { repository.getArtist(artistId) }
                 val topTracksDeferred = async { repository.getArtistTopTracks(artistId) }
                 val albumsDeferred = async { repository.getArtistAlbums(artistId) }
 
-                // Se espera a que todas las peticiones terminen.
+                // Esperamos a que todas las peticiones terminen.
                 val artist = artistDeferred.await()
                 val topTracks = topTracksDeferred.await().tracks
                 val albums = albumsDeferred.await().items
@@ -57,7 +58,8 @@ class ArtistDetailViewModel @Inject constructor(
                 _artistDetailState.value = ArtistDetailState.Success(artist, topTracks, albums)
 
             } catch (e: Exception) {
-                e.printStackTrace()
+                // Esto atrapa los errores de las peticiones principales
+                Log.e("ArtistDetailViewModel", "Fallo al cargar detalles principales del artista", e)
                 _artistDetailState.value = ArtistDetailState.Error("No se pudieron cargar los detalles del artista.")
             }
         }

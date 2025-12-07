@@ -21,7 +21,7 @@ la aplicación para el sistema operativo Android.
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android.roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SpotifyAPI">
 
@@ -30,7 +30,7 @@ la aplicación para el sistema operativo Android.
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.SpotifyAPI">
+            android:theme="@style/Theme.App.Starting"> <!-- ¡TEMA DEL SPLASH SCREEN APLICADO! -->
 
             <!--
             Este filtro de intenciones (intent-filter) identifica a MainActivity como el punto de entrada

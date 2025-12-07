@@ -93,14 +93,6 @@ data class Narrator(
 )
 
 /**
- * Modelo para el punto de reanudación de un capítulo.
- */
-data class ResumePoint(
-    @SerializedName("fully_played") val fullyPlayed: Boolean,
-    @SerializedName("resume_position_ms") val resumePositionMs: Long
-)
-
-/**
  * Modelo para las restricciones de contenido.
  */
 data class Restrictions(

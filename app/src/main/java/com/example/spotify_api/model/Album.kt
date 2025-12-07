@@ -9,7 +9,8 @@ data class SearchResponse(
     val artists: ArtistSearchResult? = null,
     val playlists: PlaylistSearchResult? = null,
     val tracks: TrackSearchResult? = null,
-    val audiobooks: AudiobookSearchResult? = null
+    val audiobooks: AudiobookSearchResult? = null,
+    val shows: ShowSearchResult? = null
 )
 
 data class AlbumSearchResult(
@@ -32,11 +33,16 @@ data class AudiobookSearchResult(
     val limit: Int, val next: String?, val offset: Int, val previous: String?, val total: Int
 )
 
+data class ShowSearchResult(
+    val items: List<SimplifiedShow>,
+    val limit: Int, val next: String?, val offset: Int, val previous: String?, val total: Int
+)
+
+
 // --- Estructuras para la Pantalla de Artista ---
 
 data class ArtistTopTracksResponse(val tracks: List<Track>)
 data class ArtistAlbumsResponse(val items: List<SimplifiedAlbum>)
-data class RelatedArtistsResponse(val artists: List<Artist>)
 
 // --- Modelos de Datos Principales ---
 
@@ -127,7 +133,6 @@ data class SimplifiedTrack(
 
 data class Image(val url: String, val height: Int?, val width: Int?)
 data class ExternalUrls(val spotify: String)
-data class Copyright(val text: String, val type: String)
 
 data class Tracks(
     val href: String,

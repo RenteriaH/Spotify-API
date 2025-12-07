@@ -31,6 +31,7 @@ import coil.compose.AsyncImage
 import com.example.spotify_api.model.Album
 import com.example.spotify_api.model.Artist
 import com.example.spotify_api.model.Playlist
+import com.example.spotify_api.model.SimplifiedShow
 import com.example.spotify_api.model.Track
 import com.example.spotify_api.navigation.Routes
 import com.example.spotify_api.viewModel.HomeState
@@ -54,11 +55,9 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = hiltView
         is HomeState.Success -> {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                // --- ¡CAMBIO AQUÍ! ---
-                contentPadding = PaddingValues(bottom = 80.dp) // Solo se necesita el padding inferior
+                contentPadding = PaddingValues(bottom = 80.dp)
             ) {
-                // --- SALUDO ---
-                item {
+                item { // --- SALUDO ---
                     Text(
                         text = currentState.greeting,
                         fontSize = 24.sp,
@@ -67,8 +66,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = hiltView
                     )
                 }
 
-                // --- SECCIÓN DE PLAYLISTS ---
-                item {
+                item { // --- SECCIÓN DE PLAYLISTS ---
                     Spacer(modifier = Modifier.height(16.dp))
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
@@ -85,8 +83,10 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = hiltView
                     }
                 }
 
-                // --- SECCIÓN DE ESCUCHADO RECIENTEMENTE ---
-                item {
+                // Ocultamos la sección de recomendaciones por ahora
+                // if (currentState.recommendations.isNotEmpty()) { ... }
+
+                item { // --- SECCIÓN DE ESCUCHADO RECIENTEMENTE ---
                     CarouselSection(
                         title = "Escuchado Recientemente",
                         items = currentState.recentlyPlayed,
@@ -98,7 +98,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = hiltView
                     )
                 }
 
-                item {
+                item { // --- TUS CANCIONES FAVORITAS ---
                     CarouselSection(
                         title = "Tus Canciones Favoritas",
                         items = currentState.topTracks,
@@ -109,7 +109,8 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = hiltView
                         }
                     )
                 }
-                item {
+
+                item { // --- NUEVOS LANZAMIENTOS ---
                     CarouselSection(
                         title = "Nuevos Lanzamientos",
                         items = currentState.newReleases,
@@ -120,7 +121,23 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel = hiltView
                         }
                     )
                 }
-                item {
+
+                // --- ¡SECCIÓN DE PODCASTS! ---
+                if (currentState.savedShows.isNotEmpty()) {
+                    item {
+                        CarouselSection(
+                            title = "Tus Podcasts",
+                            items = currentState.savedShows,
+                            itemContent = { show ->
+                                ShowCarouselItem(show = show) {
+                                    navController.navigate(Routes.ShowDetail.createRoute(show.id))
+                                }
+                            }
+                        )
+                    }
+                }
+
+                item { // --- TUS ARTISTAS FAVORITOS ---
                     CarouselSection(
                         title = "Tus Artistas Favoritos",
                         items = currentState.topArtists,
@@ -198,6 +215,29 @@ fun AlbumCarouselItem(album: Album, onClick: () -> Unit) {
         Spacer(modifier = Modifier.height(4.dp))
         Text(text = album.name, fontWeight = FontWeight.SemiBold, maxLines = 1)
         Text(text = album.artists.joinToString { it.name }, fontSize = 12.sp, maxLines = 1)
+    }
+}
+
+@Composable
+fun ShowCarouselItem(show: SimplifiedShow, onClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .width(140.dp)
+            .clickable(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        AsyncImage(
+            // --- ¡CORRECCIÓN DE CALIDAD APLICADA SOLO AQUÍ! ---
+            model = show.images.getOrNull(1)?.url ?: show.images.firstOrNull()?.url,
+            contentDescription = "Portada del Show",
+            modifier = Modifier
+                .size(140.dp)
+                .clip(RoundedCornerShape(8.dp)),
+            contentScale = ContentScale.Crop
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(text = show.name, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text = show.publisher, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

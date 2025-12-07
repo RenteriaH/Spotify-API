@@ -6,16 +6,20 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.ui.graphics.vector.ImageVector
+import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
 sealed class BottomBarScreen(val route: String, val title: String, val icon: ImageVector) {
     object Home : BottomBarScreen("home", "Home", Icons.Default.Home)
     object Search : BottomBarScreen("search", "Search", Icons.Default.Search)
-    // --- ¡NUEVA PANTALLA AÑADIDA! ---
     object Library : BottomBarScreen("library", "Library", Icons.Default.VideoLibrary)
     object Profile : BottomBarScreen("profile", "Profile", Icons.Default.Person)
 }
+
+// Helper para codificar y decodificar URLs
+fun String.encodeUrl(): String = URLEncoder.encode(this, StandardCharsets.UTF_8.toString())
+fun String.decodeUrl(): String = URLDecoder.decode(this, StandardCharsets.UTF_8.toString())
 
 sealed class Routes(val route: String) {
     object Login : Routes("login")
@@ -25,14 +29,12 @@ sealed class Routes(val route: String) {
     object Search : Routes("search?query={query}") {
         fun createRoute(query: String? = null): String {
             return if (query != null) {
-                val encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString())
-                "search?query=$encodedQuery"
+                "search?query=${query.encodeUrl()}"
             } else {
                 "search?query="
             }
         }
     }
-    // --- ¡NUEVA RUTA AÑADIDA! ---
     object Library : Routes(BottomBarScreen.Library.route)
     object Profile : Routes(BottomBarScreen.Profile.route)
 
@@ -53,5 +55,20 @@ sealed class Routes(val route: String) {
     }
     object TrackDetail : Routes("track_detail/{trackId}") {
         fun createRoute(trackId: String) = "track_detail/$trackId"
+    }
+    object ShowDetail : Routes("show_detail/{showId}") {
+        fun createRoute(showId: String) = "show_detail/$showId"
+    }
+
+    // --- ¡NUEVA RUTA PARA DETALLE DE EPISODIO! ---
+    object EpisodeDetail : Routes("episode_detail?name={name}&desc={desc}&date={date}&imageUrl={imageUrl}") {
+        fun createRoute(name: String, description: String, releaseDate: String, imageUrl: String): String {
+            // Codificamos cada parámetro para que el paso sea seguro
+            val encodedName = name.encodeUrl()
+            val encodedDesc = description.encodeUrl()
+            val encodedDate = releaseDate.encodeUrl()
+            val encodedImageUrl = imageUrl.encodeUrl()
+            return "episode_detail?name=$encodedName&desc=$encodedDesc&date=$encodedDate&imageUrl=$encodedImageUrl"
+        }
     }
 }
