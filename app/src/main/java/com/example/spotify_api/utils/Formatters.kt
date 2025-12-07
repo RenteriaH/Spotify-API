@@ -19,9 +19,9 @@ fun formatNumberWithCommas(number: Int?): String {
  * @param ms La duración en milisegundos.
  * @return Una cadena con la duración formateada.
  */
-fun formatDurationWithHours(ms: Int?): String {
+fun formatDurationWithHours(ms: Long?): String { // <--- ¡¡¡TIPO CORREGIDO A LONG!!!
     if (ms == null) return "0:00"
-    val totalSeconds = TimeUnit.MILLISECONDS.toSeconds(ms.toLong())
+    val totalSeconds = TimeUnit.MILLISECONDS.toSeconds(ms)
     val hours = TimeUnit.SECONDS.toHours(totalSeconds)
     val minutes = TimeUnit.SECONDS.toMinutes(totalSeconds) % 60
     val seconds = totalSeconds % 60

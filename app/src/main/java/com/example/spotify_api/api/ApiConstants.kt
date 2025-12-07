@@ -6,11 +6,11 @@ package com.example.spotify_api.api
  */
 object ApiConstants {
     // El ID de cliente único para tu aplicación, obtenido desde el dashboard de desarrolladores de Spotify.
-    const val CLIENT_ID = "44081bab66ff42fe8d4d7891e6e4d0fe"
+    const val CLIENT_ID = "4b1960b175a94a5aa6b1277fd29a2ac1"
 
     // El secreto de cliente para tu aplicación. Es como una contraseña y debe mantenerse confidencial.
     // IMPORTANTE: Este valor no debe subirse a repositorios públicos.
-    const val CLIENT_SECRET = "90fbbf5ddb13422ba16d0c375b6a6c8a"
+    const val CLIENT_SECRET = "ed65955506ba4440b6046a5dfea81644"
 
     // La URI a la que Spotify redirigirá al usuario después de que autorice (o deniegue) la aplicación.
     // Usamos un esquema personalizado para que la app intercepte esta URL.

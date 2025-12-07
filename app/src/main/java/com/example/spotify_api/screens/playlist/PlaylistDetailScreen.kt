@@ -6,8 +6,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,6 +18,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -41,9 +44,9 @@ fun PlaylistDetailScreen(
     viewModel: PlaylistDetailViewModel = hiltViewModel()
 ) {
     val state by viewModel.playlistState.collectAsState()
-
     var dominantColor by remember { mutableStateOf(Color.Black) }
     val context = LocalContext.current
+    var searchQuery by remember { mutableStateOf("") }
 
     when (val currentState = state) {
         is PlaylistDetailState.Loading -> {
@@ -81,7 +84,34 @@ fun PlaylistDetailScreen(
             Scaffold(
                 topBar = {
                     TopAppBar(
-                        title = { Text("") },
+                        title = {
+                            OutlinedTextField(
+                                value = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                placeholder = { Text("Buscar en la playlist...", color = Color.LightGray, fontSize = 14.sp) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp)
+                                    .padding(horizontal = 16.dp),
+                                textStyle = TextStyle(color = Color.White, fontSize = 14.sp),
+                                singleLine = true,
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Search,
+                                        contentDescription = "Search Icon",
+                                        tint = Color.White
+                                    )
+                                },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color.White,
+                                    unfocusedBorderColor = Color.LightGray.copy(alpha = 0.5f),
+                                    cursorColor = Color.White,
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent,
+                                ),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                        },
                         navigationIcon = {
                             IconButton(onClick = { navController.popBackStack() }) {
                                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Volver", tint = Color.White)
@@ -94,8 +124,8 @@ fun PlaylistDetailScreen(
                 },
                 containerColor = Color.Black
             ) { paddingValues ->
-                Box(modifier = Modifier.fillMaxSize().background(gradientBrush)) {
-                    PlaylistDetailContent(playlist = currentState.playlist, navController = navController, topPadding = paddingValues.calculateTopPadding())
+                Box(modifier = Modifier.fillMaxSize().background(gradientBrush).padding(paddingValues)) {
+                    PlaylistDetailContent(playlist = currentState.playlist, navController = navController, searchQuery = searchQuery)
                 }
             }
         }
@@ -108,17 +138,30 @@ fun PlaylistDetailScreen(
 }
 
 @Composable
-fun PlaylistDetailContent(playlist: Playlist, navController: NavController, topPadding: androidx.compose.ui.unit.Dp) {
+fun PlaylistDetailContent(playlist: Playlist, navController: NavController, searchQuery: String) {
+    val filteredItems = remember(searchQuery, playlist.tracks) {
+        if (searchQuery.isBlank()) {
+            playlist.tracks?.items ?: emptyList()
+        } else {
+            playlist.tracks?.items?.filter { playlistTrack ->
+                playlistTrack.track?.name?.contains(searchQuery, ignoreCase = true) == true
+            } ?: emptyList()
+        }
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(top = topPadding, bottom = 80.dp) 
+        contentPadding = PaddingValues(bottom = 80.dp)
     ) {
-        item {
-            PlaylistHeader(playlist = playlist)
+        if (searchQuery.isBlank()) {
+            item { Spacer(modifier = Modifier.height(16.dp)) } // Separador añadido
+            item {
+                PlaylistHeader(playlist = playlist)
+            }
+            item { HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), color = Color.White.copy(alpha = 0.1f)) }
         }
-        item { HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), color = Color.White.copy(alpha = 0.1f)) }
         
-        itemsIndexed(playlist.tracks?.items ?: emptyList()) { index, playlistTrack ->
+        itemsIndexed(filteredItems) { index, playlistTrack ->
             playlistTrack.track?.let { item ->
                 when (item.type) {
                     "track" -> TrackPlaylistItem(item = item, index = index + 1, navController = navController)
@@ -203,7 +246,7 @@ fun TrackPlaylistItem(item: PlaylistItem, index: Int, navController: NavControll
         Spacer(modifier = Modifier.width(16.dp))
 
         Text(
-            text = formatDurationWithHours(item.durationMs),
+            text = formatDurationWithHours(item.durationMs.toLong()),
             fontSize = 14.sp,
             color = Color.LightGray
         )
@@ -249,7 +292,7 @@ fun EpisodePlaylistItem(item: PlaylistItem, index: Int) {
         Spacer(modifier = Modifier.width(16.dp))
 
         Text(
-            text = formatDurationWithHours(item.durationMs),
+            text = formatDurationWithHours(item.durationMs.toLong()),
             fontSize = 14.sp,
             color = Color.LightGray
         )

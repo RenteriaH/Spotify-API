@@ -6,8 +6,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,6 +18,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -42,6 +45,7 @@ fun AlbumDetailScreen(
     val albumState by viewModel.albumState.collectAsState()
     var dominantColor by remember { mutableStateOf(Color.Black) }
     val context = LocalContext.current
+    var searchQuery by remember { mutableStateOf("") }
 
     when (val state = albumState) {
         is AlbumState.Loading -> {
@@ -79,7 +83,25 @@ fun AlbumDetailScreen(
             Scaffold(
                 topBar = {
                     TopAppBar(
-                        title = { Text("") }, 
+                        title = {
+                            OutlinedTextField(
+                                value = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                placeholder = { Text("Buscar en el álbum...", color = Color.LightGray, fontSize = 14.sp) },
+                                modifier = Modifier.fillMaxWidth().height(52.dp).padding(horizontal = 16.dp),
+                                textStyle = TextStyle(color = Color.White, fontSize = 14.sp),
+                                singleLine = true,
+                                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search Icon", tint = Color.White) },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color.White,
+                                    unfocusedBorderColor = Color.LightGray.copy(alpha = 0.5f),
+                                    cursorColor = Color.White,
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent,
+                                ),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                        },
                         navigationIcon = {
                             IconButton(onClick = { navController.popBackStack() }) {
                                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Volver", tint = Color.White)
@@ -90,10 +112,10 @@ fun AlbumDetailScreen(
                         )
                     )
                 },
-                containerColor = Color.Black 
+                containerColor = Color.Black
             ) { paddingValues ->
                 Box(modifier = Modifier.fillMaxSize().background(gradientBrush).padding(paddingValues)) {
-                    AlbumDetailContent(album = state.album, navController = navController)
+                    AlbumDetailContent(album = state.album, navController = navController, searchQuery = searchQuery)
                 }
             }
         }
@@ -106,57 +128,72 @@ fun AlbumDetailScreen(
 }
 
 @Composable
-fun AlbumDetailContent(album: Album, navController: NavController) {
+fun AlbumDetailContent(album: Album, navController: NavController, searchQuery: String) {
+    val filteredTracks = remember(searchQuery, album.tracks) {
+        if (searchQuery.isBlank()) {
+            album.tracks?.items ?: emptyList()
+        } else {
+            album.tracks?.items?.filter { track ->
+                track.name.contains(searchQuery, ignoreCase = true)
+            } ?: emptyList()
+        }
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 32.dp)
     ) {
-        item {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                AsyncImage(
-                    model = album.images.firstOrNull()?.url,
-                    contentDescription = "Portada del álbum",
-                    modifier = Modifier.size(250.dp),
-                    contentScale = ContentScale.Crop
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(album.name, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = Color.White)
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    val artist = album.artists.firstOrNull()
-                    if (artist != null) {
-                        Text(
-                            text = artist.name,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White,
-                            modifier = Modifier.clickable { navController.navigate(Routes.ArtistDetail.createRoute(artist.id)) }
-                        )
-                        Text(
-                            text = " • ${album.releaseDate.substringBefore('-')}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.LightGray
-                        )
-                    } else {
-                        Text(
-                            text = "Artista Desconocido • ${album.releaseDate.substringBefore('-')}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.LightGray
-                        )
-                    }
-                }
-            }
+        if (searchQuery.isBlank()) {
+            item { Spacer(modifier = Modifier.height(16.dp)) }
+            item { AlbumHeader(album = album, navController = navController) }
+            item { HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), color = Color.White.copy(alpha = 0.1f)) }
         }
 
-        item { HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp), color = Color.White.copy(alpha = 0.1f)) }
-
-        itemsIndexed(album.tracks?.items ?: emptyList()) { index, track ->
+        itemsIndexed(filteredTracks) { index, track ->
             TrackRow(track = track, index = index + 1, navController = navController)
+        }
+    }
+}
+
+@Composable
+fun AlbumHeader(album: Album, navController: NavController) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        AsyncImage(
+            model = album.images.firstOrNull()?.url,
+            contentDescription = "Portada del álbum",
+            modifier = Modifier.size(250.dp),
+            contentScale = ContentScale.Crop
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(album.name, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = Color.White)
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            val artist = album.artists.firstOrNull()
+            if (artist != null) {
+                Text(
+                    text = artist.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
+                    modifier = Modifier.clickable { navController.navigate(Routes.ArtistDetail.createRoute(artist.id)) }
+                )
+                Text(
+                    text = " • ${album.releaseDate.substringBefore('-')}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.LightGray
+                )
+            } else {
+                Text(
+                    text = "Artista Desconocido • ${album.releaseDate.substringBefore('-')}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.LightGray
+                )
+            }
         }
     }
 }
