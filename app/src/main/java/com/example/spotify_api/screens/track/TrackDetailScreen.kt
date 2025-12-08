@@ -2,6 +2,7 @@ package com.example.spotify_api.screens.track
 
 import android.graphics.drawable.BitmapDrawable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -120,7 +121,7 @@ fun TrackDetailContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(top = 0.dp, start = 16.dp, end = 16.dp, bottom = 16.dp), // Padding superior reducido
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -156,26 +157,14 @@ fun TrackDetailContent(
                 }
             }
         }
-        Spacer(modifier = Modifier.height(32.dp)) // Aumentado para dar espacio al botón
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // --- ¡¡¡BOTÓN DE PLAY!!! ---
-        Button(
-            onClick = { playbackManager.play(track.uri) },
-            shape = CircleShape,
-            modifier = Modifier.size(72.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = dominantColor,
-                contentColor = Color.White
-            ),
-            elevation = ButtonDefaults.buttonElevation(8.dp)
-        ) {
-            Icon(Icons.Default.PlayArrow, contentDescription = "Reproducir", modifier = Modifier.size(48.dp))
-        }
-        
-        Spacer(modifier = Modifier.height(32.dp))
-
+        // --- Contenedor con borde para la información --- 
         Column(
-            modifier = Modifier.fillMaxWidth(0.8f),
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .border(1.dp, Color.White.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                .padding(16.dp),
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -205,6 +194,22 @@ fun TrackDetailContent(
                     color = Color.White
                 )
             }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // --- Botón de reproducción movido al final ---
+        Button(
+            onClick = { playbackManager.play(track.uri) },
+            shape = CircleShape,
+            modifier = Modifier.size(72.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = dominantColor,
+                contentColor = Color.White
+            ),
+            elevation = ButtonDefaults.buttonElevation(8.dp)
+        ) {
+            Icon(Icons.Default.PlayArrow, contentDescription = "Reproducir", modifier = Modifier.size(48.dp))
         }
     }
 }

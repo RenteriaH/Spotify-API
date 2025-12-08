@@ -42,8 +42,6 @@ data class AlbumSearchResult(
     val limit: Int, val next: String?, val offset: Int, val previous: String?, val total: Int
 )
 
-data class ArtistAlbumsResponse(val items: List<SimplifiedAlbum>)
-
 data class NewReleasesResponse(
     val albums: AlbumSearchResult
 )

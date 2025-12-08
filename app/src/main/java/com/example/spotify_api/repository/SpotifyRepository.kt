@@ -149,7 +149,7 @@ class SpotifyRepository @Inject constructor(
         return spotifyApiService.getShowEpisodes(token, id, market, limit, offset)
     }
 
-    suspend fun getMySavedShows(limit: Int? = null, offset: Int? = null): PagingObject<SavedShowObject> {
+    suspend fun getMySavedShows(limit: Int? = null, offset: Int? = null): PagingObject<SavedShow> {
         val token = authManager.getBearerToken() ?: throw Exception("Token not found")
         return spotifyApiService.getMySavedShows(token, limit, offset)
     }

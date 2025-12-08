@@ -38,7 +38,6 @@ import com.example.spotify_api.playback.SpotifyPlaybackManager
 import com.example.spotify_api.utils.formatDurationWithHours
 import com.example.spotify_api.viewModel.ShowDetailState
 import com.example.spotify_api.viewModel.ShowDetailViewModel
-import java.net.URLEncoder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -166,17 +165,14 @@ fun ShowDetailContent(
             EpisodeListItem(
                 episode = episode,
                 onItemClick = {
-                    val encodedName = URLEncoder.encode(episode.name, "UTF-8")
-                    val encodedDesc = URLEncoder.encode(episode.description, "UTF-8")
-                    val encodedDate = URLEncoder.encode(episode.releaseDate, "UTF-8")
-                    val encodedImageUrl = URLEncoder.encode(episode.images.firstOrNull()?.url ?: "", "UTF-8")
                     navController.navigate(
                         Routes.EpisodeDetail.createRoute(
-                            name = encodedName,
-                            description = encodedDesc,
-                            releaseDate = encodedDate,
-                            imageUrl = encodedImageUrl,
-                            uri = episode.uri
+                            name = episode.name,
+                            description = episode.description,
+                            releaseDate = episode.releaseDate,
+                            imageUrl = episode.images.firstOrNull()?.url ?: "",
+                            uri = episode.uri,
+                            durationMs = episode.durationMs
                         )
                     )
                 },

@@ -1,6 +1,5 @@
 package com.example.spotify_api.navigation
 
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,8 +34,8 @@ import com.example.spotify_api.screens.artist.ArtistDetailScreen
 import com.example.spotify_api.screens.audiobook.AudiobookDetailScreen
 import com.example.spotify_api.screens.category.CategoryPlaylistsScreen
 import com.example.spotify_api.screens.playlist.PlaylistDetailScreen
-import com.example.spotify_api.screens.show.EpisodeDetailScreen
 import com.example.spotify_api.screens.show.ShowDetailScreen
+import com.example.spotify_api.screens.showimport.EpisodeDetailScreen
 import com.example.spotify_api.screens.track.TrackDetailScreen
 import com.example.spotify_api.ui.HomeScreen
 import com.example.spotify_api.ui.LoginScreen
@@ -139,7 +138,8 @@ fun NavManager(playbackManager: SpotifyPlaybackManager) {
                     navArgument("desc") { type = NavType.StringType },
                     navArgument("date") { type = NavType.StringType },
                     navArgument("imageUrl") { type = NavType.StringType },
-                    navArgument("uri") { type = NavType.StringType } // Argumento para la URI del episodio
+                    navArgument("uri") { type = NavType.StringType }, // Argumento para la URI del episodio
+                    navArgument("durationMs") { type = NavType.IntType } // Argumento para la duración
                 )
             ) { backStackEntry ->
                 EpisodeDetailScreen(
@@ -149,6 +149,7 @@ fun NavManager(playbackManager: SpotifyPlaybackManager) {
                     releaseDate = backStackEntry.arguments?.getString("date")?.decodeUrl(),
                     imageUrl = backStackEntry.arguments?.getString("imageUrl")?.decodeUrl(),
                     uri = backStackEntry.arguments?.getString("uri")?.decodeUrl(), // Se pasa la URI
+                    durationMs = backStackEntry.arguments?.getInt("durationMs"), // Se pasa la duración
                     playbackManager = playbackManager // Se pasa el gestor de reproducción
                 )
             }

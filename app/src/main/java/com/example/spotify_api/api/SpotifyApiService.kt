@@ -199,7 +199,7 @@ interface SpotifyApiService {
         @Header("Authorization") token: String,
         @Query("limit") limit: Int? = null,
         @Query("offset") offset: Int? = null
-    ): PagingObject<SavedShowObject>
+    ): PagingObject<SavedShow>
 
     @PUT("me/shows")
     suspend fun saveShowsForCurrentUser(

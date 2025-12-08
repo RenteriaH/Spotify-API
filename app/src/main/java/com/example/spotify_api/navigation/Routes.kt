@@ -60,16 +60,15 @@ sealed class Routes(val route: String) {
         fun createRoute(showId: String) = "show_detail/$showId"
     }
 
-    // --- ¡NUEVA RUTA PARA DETALLE DE EPISODIO! ---
-    object EpisodeDetail : Routes("episode_detail?name={name}&desc={desc}&date={date}&imageUrl={imageUrl}&uri={uri}") {
-        fun createRoute(name: String, description: String, releaseDate: String, imageUrl: String, uri: String): String {
-            // Codificamos cada parámetro para que el paso sea seguro
+    // --- ¡RUTA CORREGIDA! ---
+    object EpisodeDetail : Routes("episode_detail?name={name}&desc={desc}&date={date}&imageUrl={imageUrl}&uri={uri}&durationMs={durationMs}") {
+        fun createRoute(name: String, description: String, releaseDate: String, imageUrl: String, uri: String, durationMs: Int): String {
             val encodedName = name.encodeUrl()
             val encodedDesc = description.encodeUrl()
             val encodedDate = releaseDate.encodeUrl()
             val encodedImageUrl = imageUrl.encodeUrl()
             val encodedUri = uri.encodeUrl()
-            return "episode_detail?name=$encodedName&desc=$encodedDesc&date=$encodedDate&imageUrl=$encodedImageUrl&uri=$encodedUri"
+            return "episode_detail?name=$encodedName&desc=$encodedDesc&date=$encodedDate&imageUrl=$encodedImageUrl&uri=$encodedUri&durationMs=$durationMs"
         }
     }
 }

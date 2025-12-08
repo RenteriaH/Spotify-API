@@ -103,10 +103,3 @@ data class Author(
 data class Narrator(
     val name: String
 )
-
-/**
- * Modelo para las restricciones de contenido.
- */
-data class Restrictions(
-    val reason: String
-)
