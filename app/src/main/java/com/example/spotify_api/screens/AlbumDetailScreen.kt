@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,6 +33,7 @@ import coil.request.ImageRequest
 import com.example.spotify_api.model.Album
 import com.example.spotify_api.model.SimplifiedTrack
 import com.example.spotify_api.navigation.Routes
+import com.example.spotify_api.playback.SpotifyPlaybackManager
 import com.example.spotify_api.viewModel.AlbumDetailViewModel
 import com.example.spotify_api.viewModel.AlbumState
 import java.util.concurrent.TimeUnit
@@ -40,6 +42,7 @@ import java.util.concurrent.TimeUnit
 @Composable
 fun AlbumDetailScreen(
     navController: NavController,
+    playbackManager: SpotifyPlaybackManager,
     viewModel: AlbumDetailViewModel = hiltViewModel()
 ) {
     val albumState by viewModel.albumState.collectAsState()
@@ -115,7 +118,12 @@ fun AlbumDetailScreen(
                 containerColor = Color.Black
             ) { paddingValues ->
                 Box(modifier = Modifier.fillMaxSize().background(gradientBrush).padding(paddingValues)) {
-                    AlbumDetailContent(album = state.album, navController = navController, searchQuery = searchQuery)
+                    AlbumDetailContent(
+                        album = state.album,
+                        navController = navController,
+                        searchQuery = searchQuery,
+                        playbackManager = playbackManager
+                    )
                 }
             }
         }
@@ -128,7 +136,12 @@ fun AlbumDetailScreen(
 }
 
 @Composable
-fun AlbumDetailContent(album: Album, navController: NavController, searchQuery: String) {
+fun AlbumDetailContent(
+    album: Album,
+    navController: NavController,
+    searchQuery: String,
+    playbackManager: SpotifyPlaybackManager
+) {
     val filteredTracks = remember(searchQuery, album.tracks) {
         if (searchQuery.isBlank()) {
             album.tracks?.items ?: emptyList()
@@ -150,7 +163,12 @@ fun AlbumDetailContent(album: Album, navController: NavController, searchQuery: 
         }
 
         itemsIndexed(filteredTracks) { index, track ->
-            TrackRow(track = track, index = index + 1, navController = navController)
+            TrackRow(
+                track = track,
+                index = index + 1,
+                navController = navController,
+                onPlayClick = { playbackManager.play(track.uri) }
+            )
         }
     }
 }
@@ -199,7 +217,12 @@ fun AlbumHeader(album: Album, navController: NavController) {
 }
 
 @Composable
-fun TrackRow(track: SimplifiedTrack, index: Int, navController: NavController) {
+fun TrackRow(
+    track: SimplifiedTrack,
+    index: Int,
+    navController: NavController,
+    onPlayClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -235,6 +258,10 @@ fun TrackRow(track: SimplifiedTrack, index: Int, navController: NavController) {
             fontSize = 14.sp,
             color = Color.LightGray
         )
+
+        IconButton(onClick = onPlayClick) {
+            Icon(Icons.Default.PlayArrow, contentDescription = "Reproducir canción", tint = Color.White)
+        }
     }
 }
 

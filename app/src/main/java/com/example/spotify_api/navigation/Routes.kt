@@ -23,7 +23,7 @@ fun String.decodeUrl(): String = URLDecoder.decode(this, StandardCharsets.UTF_8.
 
 sealed class Routes(val route: String) {
     object Login : Routes("login")
-    object Main : Routes("main") 
+    object Main : Routes("main")
 
     object Home : Routes(BottomBarScreen.Home.route)
     object Search : Routes("search?query={query}") {
@@ -61,14 +61,15 @@ sealed class Routes(val route: String) {
     }
 
     // --- ¡NUEVA RUTA PARA DETALLE DE EPISODIO! ---
-    object EpisodeDetail : Routes("episode_detail?name={name}&desc={desc}&date={date}&imageUrl={imageUrl}") {
-        fun createRoute(name: String, description: String, releaseDate: String, imageUrl: String): String {
+    object EpisodeDetail : Routes("episode_detail?name={name}&desc={desc}&date={date}&imageUrl={imageUrl}&uri={uri}") {
+        fun createRoute(name: String, description: String, releaseDate: String, imageUrl: String, uri: String): String {
             // Codificamos cada parámetro para que el paso sea seguro
             val encodedName = name.encodeUrl()
             val encodedDesc = description.encodeUrl()
             val encodedDate = releaseDate.encodeUrl()
             val encodedImageUrl = imageUrl.encodeUrl()
-            return "episode_detail?name=$encodedName&desc=$encodedDesc&date=$encodedDate&imageUrl=$encodedImageUrl"
+            val encodedUri = uri.encodeUrl()
+            return "episode_detail?name=$encodedName&desc=$encodedDesc&date=$encodedDate&imageUrl=$encodedImageUrl&uri=$encodedUri"
         }
     }
 }

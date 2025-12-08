@@ -1,12 +1,12 @@
 package com.example.spotify_api.screens.audiobook
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -21,12 +21,16 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.spotify_api.model.Audiobook
 import com.example.spotify_api.model.SimplifiedChapter
+import com.example.spotify_api.playback.SpotifyPlaybackManager
 import com.example.spotify_api.viewModel.AudiobookDetailViewModel
 import com.example.spotify_api.viewModel.AudiobookState
 import java.util.concurrent.TimeUnit
 
 @Composable
-fun AudiobookDetailScreen(viewModel: AudiobookDetailViewModel = hiltViewModel()) {
+fun AudiobookDetailScreen(
+    playbackManager: SpotifyPlaybackManager,
+    viewModel: AudiobookDetailViewModel = hiltViewModel()
+) {
     val state by viewModel.audiobookState.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -35,7 +39,10 @@ fun AudiobookDetailScreen(viewModel: AudiobookDetailViewModel = hiltViewModel())
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             }
             is AudiobookState.Success -> {
-                AudiobookDetailContent(audiobook = currentState.audiobook)
+                AudiobookDetailContent(
+                    audiobook = currentState.audiobook,
+                    playbackManager = playbackManager
+                )
             }
             is AudiobookState.Error -> {
                 Text(text = currentState.message, modifier = Modifier.align(Alignment.Center))
@@ -45,7 +52,10 @@ fun AudiobookDetailScreen(viewModel: AudiobookDetailViewModel = hiltViewModel())
 }
 
 @Composable
-fun AudiobookDetailContent(audiobook: Audiobook) {
+fun AudiobookDetailContent(
+    audiobook: Audiobook,
+    playbackManager: SpotifyPlaybackManager
+) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         // --- Cabecera del Audiolibro ---
         item {
@@ -56,7 +66,11 @@ fun AudiobookDetailContent(audiobook: Audiobook) {
         item { HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) }
 
         itemsIndexed(audiobook.chapters.items) { index, chapter ->
-            ChapterListItem(chapter = chapter, index = index + 1)
+            ChapterListItem(
+                chapter = chapter,
+                index = index + 1,
+                onPlayClick = { playbackManager.play(chapter.uri) }
+            )
         }
     }
 }
@@ -94,10 +108,15 @@ fun AudiobookHeader(audiobook: Audiobook) {
 }
 
 @Composable
-fun ChapterListItem(chapter: SimplifiedChapter, index: Int) {
+fun ChapterListItem(
+    chapter: SimplifiedChapter,
+    index: Int,
+    onPlayClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onPlayClick() } // <-- ¡HACE EL CAPÍTULO CLICKEABLE!
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -127,6 +146,9 @@ fun ChapterListItem(chapter: SimplifiedChapter, index: Int) {
             fontSize = 14.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        IconButton(onClick = onPlayClick) {
+            Icon(Icons.Default.PlayArrow, contentDescription = "Reproducir capítulo", tint = MaterialTheme.colorScheme.primary)
+        }
     }
 }
 

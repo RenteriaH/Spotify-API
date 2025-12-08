@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,7 +32,9 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.spotify_api.model.PlaylistItem
 import com.example.spotify_api.model.Playlist
+import com.example.spotify_api.model.PlaylistTrack
 import com.example.spotify_api.navigation.Routes
+import com.example.spotify_api.playback.SpotifyPlaybackManager
 import com.example.spotify_api.utils.formatDurationWithHours
 import com.example.spotify_api.utils.formatNumberWithCommas
 import com.example.spotify_api.viewModel.PlaylistDetailState
@@ -40,7 +43,8 @@ import com.example.spotify_api.viewModel.PlaylistDetailViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaylistDetailScreen(
-    navController: NavController, 
+    navController: NavController,
+    playbackManager: SpotifyPlaybackManager,
     viewModel: PlaylistDetailViewModel = hiltViewModel()
 ) {
     val state by viewModel.playlistState.collectAsState()
@@ -125,7 +129,12 @@ fun PlaylistDetailScreen(
                 containerColor = Color.Black
             ) { paddingValues ->
                 Box(modifier = Modifier.fillMaxSize().background(gradientBrush).padding(paddingValues)) {
-                    PlaylistDetailContent(playlist = currentState.playlist, navController = navController, searchQuery = searchQuery)
+                    PlaylistDetailContent(
+                        playlist = currentState.playlist,
+                        navController = navController,
+                        searchQuery = searchQuery,
+                        playbackManager = playbackManager
+                    )
                 }
             }
         }
@@ -138,7 +147,12 @@ fun PlaylistDetailScreen(
 }
 
 @Composable
-fun PlaylistDetailContent(playlist: Playlist, navController: NavController, searchQuery: String) {
+fun PlaylistDetailContent(
+    playlist: Playlist,
+    navController: NavController,
+    searchQuery: String,
+    playbackManager: SpotifyPlaybackManager
+) {
     val filteredItems = remember(searchQuery, playlist.tracks) {
         if (searchQuery.isBlank()) {
             playlist.tracks?.items ?: emptyList()
@@ -163,9 +177,19 @@ fun PlaylistDetailContent(playlist: Playlist, navController: NavController, sear
         
         itemsIndexed(filteredItems) { index, playlistTrack ->
             playlistTrack.track?.let { item ->
+                val uri = "spotify:${item.type}:${item.id}"
                 when (item.type) {
-                    "track" -> TrackPlaylistItem(item = item, index = index + 1, navController = navController)
-                    "episode" -> EpisodePlaylistItem(item = item, index = index + 1)
+                    "track" -> TrackPlaylistItem(
+                        item = item,
+                        index = index + 1,
+                        navController = navController,
+                        onPlayClick = { playbackManager.play(uri) }
+                    )
+                    "episode" -> EpisodePlaylistItem(
+                        item = item,
+                        index = index + 1,
+                        onPlayClick = { playbackManager.play(uri) }
+                    )
                     else -> { /* No mostrar nada si el tipo no es reconocido */ }
                 }
             }
@@ -216,7 +240,12 @@ fun PlaylistHeader(playlist: Playlist) {
 }
 
 @Composable
-fun TrackPlaylistItem(item: PlaylistItem, index: Int, navController: NavController) {
+fun TrackPlaylistItem(
+    item: PlaylistItem,
+    index: Int,
+    navController: NavController,
+    onPlayClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -250,14 +279,23 @@ fun TrackPlaylistItem(item: PlaylistItem, index: Int, navController: NavControll
             fontSize = 14.sp,
             color = Color.LightGray
         )
+
+        IconButton(onClick = onPlayClick) {
+            Icon(Icons.Default.PlayArrow, contentDescription = "Reproducir", tint = Color.White)
+        }
     }
 }
 
 @Composable
-fun EpisodePlaylistItem(item: PlaylistItem, index: Int) {
+fun EpisodePlaylistItem(
+    item: PlaylistItem,
+    index: Int,
+    onPlayClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onPlayClick() }
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -296,5 +334,9 @@ fun EpisodePlaylistItem(item: PlaylistItem, index: Int) {
             fontSize = 14.sp,
             color = Color.LightGray
         )
+
+        IconButton(onClick = onPlayClick) {
+            Icon(Icons.Default.PlayArrow, contentDescription = "Reproducir", tint = Color.White)
+        }
     }
 }

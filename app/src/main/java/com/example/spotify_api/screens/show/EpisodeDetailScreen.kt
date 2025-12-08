@@ -8,6 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.spotify_api.playback.SpotifyPlaybackManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,7 +29,9 @@ fun EpisodeDetailScreen(
     name: String?,
     description: String?,
     releaseDate: String?,
-    imageUrl: String?
+    imageUrl: String?,
+    uri: String?,
+    playbackManager: SpotifyPlaybackManager
 ) {
     Scaffold(
         topBar = {
@@ -69,6 +73,20 @@ fun EpisodeDetailScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Botón de reproducción
+            if (uri != null) {
+                Button(
+                    onClick = { playbackManager.play(uri) },
+                    modifier = Modifier.fillMaxWidth(0.8f)
+                ) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = "Reproducir Episodio")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Reproducir Episodio")
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             // Usamos AndroidView para renderizar el HTML de la descripción

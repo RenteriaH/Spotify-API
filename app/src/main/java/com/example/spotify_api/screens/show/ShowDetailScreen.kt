@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -33,6 +34,7 @@ import coil.request.ImageRequest
 import com.example.spotify_api.model.Show
 import com.example.spotify_api.model.SimplifiedEpisode
 import com.example.spotify_api.navigation.Routes
+import com.example.spotify_api.playback.SpotifyPlaybackManager
 import com.example.spotify_api.utils.formatDurationWithHours
 import com.example.spotify_api.viewModel.ShowDetailState
 import com.example.spotify_api.viewModel.ShowDetailViewModel
@@ -42,6 +44,7 @@ import java.net.URLEncoder
 @Composable
 fun ShowDetailScreen(
     navController: NavController,
+    playbackManager: SpotifyPlaybackManager,
     viewModel: ShowDetailViewModel = hiltViewModel()
 ) {
     val state by viewModel.showDetailState.collectAsState()
@@ -117,7 +120,12 @@ fun ShowDetailScreen(
                 containerColor = Color.Black
             ) { paddingValues ->
                 Box(modifier = Modifier.fillMaxSize().background(gradientBrush).padding(paddingValues)) {
-                    ShowDetailContent(show = currentState.show, navController = navController, searchQuery = searchQuery)
+                    ShowDetailContent(
+                        show = currentState.show,
+                        navController = navController,
+                        searchQuery = searchQuery,
+                        playbackManager = playbackManager
+                    )
                 }
             }
         }
@@ -130,7 +138,12 @@ fun ShowDetailScreen(
 }
 
 @Composable
-fun ShowDetailContent(show: Show, navController: NavController, searchQuery: String) {
+fun ShowDetailContent(
+    show: Show,
+    navController: NavController,
+    searchQuery: String,
+    playbackManager: SpotifyPlaybackManager
+) {
     val filteredEpisodes = remember(searchQuery, show.episodes) {
         if (searchQuery.isBlank()) {
             show.episodes.items
@@ -150,21 +163,25 @@ fun ShowDetailContent(show: Show, navController: NavController, searchQuery: Str
         }
 
         items(filteredEpisodes) { episode ->
-            EpisodeListItem(episode = episode) {
-                 val encodedName = URLEncoder.encode(episode.name, "UTF-8")
-                 val encodedDesc = URLEncoder.encode(episode.description, "UTF-8")
-                 val encodedDate = URLEncoder.encode(episode.releaseDate, "UTF-8")
-                 val encodedImageUrl = URLEncoder.encode(episode.images.firstOrNull()?.url ?: "", "UTF-8")
-
-                navController.navigate(
-                    Routes.EpisodeDetail.createRoute(
-                        name = encodedName,
-                        description = encodedDesc,
-                        releaseDate = encodedDate,
-                        imageUrl = encodedImageUrl
+            EpisodeListItem(
+                episode = episode,
+                onItemClick = {
+                    val encodedName = URLEncoder.encode(episode.name, "UTF-8")
+                    val encodedDesc = URLEncoder.encode(episode.description, "UTF-8")
+                    val encodedDate = URLEncoder.encode(episode.releaseDate, "UTF-8")
+                    val encodedImageUrl = URLEncoder.encode(episode.images.firstOrNull()?.url ?: "", "UTF-8")
+                    navController.navigate(
+                        Routes.EpisodeDetail.createRoute(
+                            name = encodedName,
+                            description = encodedDesc,
+                            releaseDate = encodedDate,
+                            imageUrl = encodedImageUrl,
+                            uri = episode.uri
+                        )
                     )
-                )
-            }
+                },
+                onPlayClick = { playbackManager.play(episode.uri) }
+            )
         }
     }
 }
@@ -188,11 +205,15 @@ fun ShowHeader(show: Show) {
 }
 
 @Composable
-fun EpisodeListItem(episode: SimplifiedEpisode, onClick: () -> Unit) {
+fun EpisodeListItem(
+    episode: SimplifiedEpisode,
+    onItemClick: () -> Unit,
+    onPlayClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(onClick = onItemClick)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -218,5 +239,8 @@ fun EpisodeListItem(episode: SimplifiedEpisode, onClick: () -> Unit) {
             fontSize = 12.sp,
             color = Color.LightGray
         )
+        IconButton(onClick = onPlayClick) {
+            Icon(Icons.Default.PlayArrow, contentDescription = "Reproducir episodio", tint = Color.White)
+        }
     }
 }

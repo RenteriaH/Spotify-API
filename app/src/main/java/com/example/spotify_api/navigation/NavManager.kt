@@ -92,7 +92,7 @@ fun NavManager(playbackManager: SpotifyPlaybackManager) {
             composable(
                 route = Routes.AlbumDetail.route,
                 arguments = listOf(navArgument("albumId") { type = NavType.StringType })
-            ) { AlbumDetailScreen(navController = navController) }
+            ) { AlbumDetailScreen(navController = navController, playbackManager = playbackManager) }
 
             composable(
                 route = Routes.ArtistDetail.route,
@@ -109,12 +109,12 @@ fun NavManager(playbackManager: SpotifyPlaybackManager) {
             composable(
                 route = Routes.PlaylistDetail.route,
                 arguments = listOf(navArgument("playlistId") { type = NavType.StringType })
-            ) { PlaylistDetailScreen(navController = navController) }
+            ) { PlaylistDetailScreen(navController = navController, playbackManager = playbackManager) }
 
             composable(
                 route = Routes.AudiobookDetail.route,
                 arguments = listOf(navArgument("audiobookId") { type = NavType.StringType })
-            ) { AudiobookDetailScreen() }
+            ) { AudiobookDetailScreen(playbackManager = playbackManager) }
 
             composable(
                 route = Routes.CategoryPlaylists.route,
@@ -129,7 +129,7 @@ fun NavManager(playbackManager: SpotifyPlaybackManager) {
             composable(
                 route = Routes.ShowDetail.route,
                 arguments = listOf(navArgument("showId") { type = NavType.StringType })
-            ) { ShowDetailScreen(navController = navController) }
+            ) { ShowDetailScreen(navController = navController, playbackManager = playbackManager) }
 
             composable(
                 route = Routes.EpisodeDetail.route,
@@ -137,7 +137,8 @@ fun NavManager(playbackManager: SpotifyPlaybackManager) {
                     navArgument("name") { type = NavType.StringType },
                     navArgument("desc") { type = NavType.StringType },
                     navArgument("date") { type = NavType.StringType },
-                    navArgument("imageUrl") { type = NavType.StringType }
+                    navArgument("imageUrl") { type = NavType.StringType },
+                    navArgument("uri") { type = NavType.StringType } // Argumento para la URI del episodio
                 )
             ) { backStackEntry ->
                 EpisodeDetailScreen(
@@ -145,7 +146,9 @@ fun NavManager(playbackManager: SpotifyPlaybackManager) {
                     name = backStackEntry.arguments?.getString("name")?.decodeUrl(),
                     description = backStackEntry.arguments?.getString("desc")?.decodeUrl(),
                     releaseDate = backStackEntry.arguments?.getString("date")?.decodeUrl(),
-                    imageUrl = backStackEntry.arguments?.getString("imageUrl")?.decodeUrl()
+                    imageUrl = backStackEntry.arguments?.getString("imageUrl")?.decodeUrl(),
+                    uri = backStackEntry.arguments?.getString("uri")?.decodeUrl(), // Se pasa la URI
+                    playbackManager = playbackManager // Se pasa el gestor de reproducción
                 )
             }
         }
