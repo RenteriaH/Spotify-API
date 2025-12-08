@@ -53,6 +53,18 @@ data class SimplifiedAudiobook(
 )
 
 /**
+ * Objeto de respuesta para la petición de varios audiolibros.
+ */
+data class SeveralAudiobooksResponse(
+    val audiobooks: List<Audiobook?>
+)
+
+data class AudiobookSearchResult(
+    val items: List<SimplifiedAudiobook>,
+    val limit: Int, val next: String?, val offset: Int, val previous: String?, val total: Int
+)
+
+/**
  * Modelo para un capítulo de un audiolibro.
  */
 data class SimplifiedChapter(
@@ -97,11 +109,4 @@ data class Narrator(
  */
 data class Restrictions(
     val reason: String
-)
-
-/**
- * Objeto de respuesta para la petición de varios audiolibros.
- */
-data class SeveralAudiobooksResponse(
-    val audiobooks: List<Audiobook?>
 )

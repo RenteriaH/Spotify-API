@@ -19,11 +19,6 @@ data class UserProfile(
 )
 
 /**
- * Representa la información de seguidores de un usuario.
- */
-
-
-/**
  * Representa la respuesta del endpoint que devuelve los artistas más escuchados por el usuario.
  */
 data class TopArtistsResponse(

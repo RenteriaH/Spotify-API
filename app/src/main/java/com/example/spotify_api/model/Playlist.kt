@@ -22,37 +22,6 @@ data class Playlist(
 )
 
 /**
- * Un item dentro de una playlist, que puede ser una canción o un episodio.
- * Gson poblará los campos que correspondan y dejará los otros como null.
- */
-data class PlaylistItem(
-    // Campos comunes
-    val id: String,
-    val name: String,
-    val type: String, // "track" o "episode"
-    @SerializedName("duration_ms") val durationMs: Int,
-    val explicit: Boolean,
-
-    // Campos específicos de Track
-    val album: SimplifiedAlbum?,
-    val artists: List<Artist>?,
-
-    // Campos específicos de Episode
-    val images: List<Image>?,
-    val show: SimplifiedShow?
-)
-
-/**
- * Contenedor para cada item en una playlist. El item puede ser una canción o un episodio.
- */
-data class PlaylistTrack(
-    @SerializedName("added_at") val addedAt: String?,
-    @SerializedName("added_by") val addedBy: UserProfile?,
-    @SerializedName("is_local") val isLocal: Boolean,
-    val track: PlaylistItem? // MODIFICADO: Antes era Track?, ahora es PlaylistItem?
-)
-
-/**
  * Modelo para el dueño de una playlist.
  */
 data class PlaylistOwner(
@@ -82,6 +51,7 @@ data class FeaturedPlaylistsResponse(
     val playlists: PlaylistSearchResult
 )
 
+
 /**
  * Objeto genérico para paginación, usado por la API de Spotify.
  */
@@ -95,8 +65,40 @@ data class PagingObject<T>(
     val total: Int
 )
 
-// --- ¡NUEVO MODELO AÑADIDO! ---
-data class PlayHistoryObject(
-    val track: Track,
-    @SerializedName("played_at") val playedAt: String
+data class CreatePlaylistRequest(
+    val name: String,
+    val description: String? = null,
+    val public: Boolean? = null,
+    val collaborative: Boolean? = null
+)
+
+/**
+ * Un item dentro de una playlist, que puede ser una canción o un episodio.
+ * Gson poblará los campos que correspondan y dejará los otros como null.
+ */
+data class PlaylistItem(
+    // Campos comunes
+    val id: String,
+    val name: String,
+    val type: String, // "track" o "episode"
+    @SerializedName("duration_ms") val durationMs: Int,
+    val explicit: Boolean,
+
+    // Campos específicos de Track
+    val album: SimplifiedAlbum?,
+    val artists: List<Artist>?,
+
+    // Campos específicos de Episode
+    val images: List<Image>?,
+    val show: SimplifiedShow?
+)
+
+/**
+ * Contenedor para cada item en una playlist. El item puede ser una canción o un episodio.
+ */
+data class PlaylistTrack(
+    @SerializedName("added_at") val addedAt: String?,
+    @SerializedName("added_by") val addedBy: UserProfile?,
+    @SerializedName("is_local") val isLocal: Boolean,
+    val track: PlaylistItem? // MODIFICADO: Antes era Track?, ahora es PlaylistItem?
 )

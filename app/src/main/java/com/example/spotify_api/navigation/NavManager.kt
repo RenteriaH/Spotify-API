@@ -61,7 +61,8 @@ fun NavManager(playbackManager: SpotifyPlaybackManager) {
         BottomBarScreen.Home.route,
         BottomBarScreen.Search.route,
         BottomBarScreen.Library.route,
-        BottomBarScreen.Profile.route
+        BottomBarScreen.Profile.route,
+        Routes.ArtistDetail.route // <-- ¡¡¡AÑADIDO!!!
     )
 
     Scaffold(
