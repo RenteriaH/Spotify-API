@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -32,7 +33,6 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.spotify_api.model.PlaylistItem
 import com.example.spotify_api.model.Playlist
-import com.example.spotify_api.model.PlaylistTrack
 import com.example.spotify_api.navigation.Routes
 import com.example.spotify_api.playback.SpotifyPlaybackManager
 import com.example.spotify_api.utils.formatDurationWithHours
@@ -209,7 +209,7 @@ fun PlaylistHeader(playlist: Playlist) {
         AsyncImage(
             model = playlist.images?.firstOrNull()?.url,
             contentDescription = "Portada de la playlist",
-            modifier = Modifier.size(250.dp),
+            modifier = Modifier.size(250.dp).clip(RoundedCornerShape(8.dp)),
             contentScale = ContentScale.Crop
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -304,7 +304,7 @@ fun EpisodePlaylistItem(
         AsyncImage(
             model = item.images?.firstOrNull()?.url,
             contentDescription = "Portada del episodio",
-            modifier = Modifier.size(56.dp),
+            modifier = Modifier.size(56.dp).clip(RoundedCornerShape(4.dp)),
             contentScale = ContentScale.Crop
         )
         
