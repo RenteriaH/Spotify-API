@@ -3,9 +3,11 @@ package com.example.spotify_api.screens.track
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +23,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.spotify_api.model.Track
 import com.example.spotify_api.navigation.Routes
+import com.example.spotify_api.playback.SpotifyPlaybackManager
 import com.example.spotify_api.viewModel.TrackDetailState
 import com.example.spotify_api.viewModel.TrackDetailViewModel
 import java.util.concurrent.TimeUnit
@@ -29,7 +32,8 @@ import java.util.concurrent.TimeUnit
 @Composable
 fun TrackDetailScreen(
     navController: NavController,
-    viewModel: TrackDetailViewModel = hiltViewModel()
+    viewModel: TrackDetailViewModel = hiltViewModel(),
+    playbackManager: SpotifyPlaybackManager // <-- ¡GESTOR INYECTADO!
 ) {
     val state by viewModel.trackState.collectAsState()
 
@@ -45,7 +49,6 @@ fun TrackDetailScreen(
             val gradientBrush = Brush.verticalGradient(
                 colors = listOf(dominantColor.copy(alpha = 0.5f), Color.Black)
             )
-            // --- ¡CAMBIO AQUÍ! ---
             Scaffold(
                 topBar = {
                     TopAppBar(
@@ -63,7 +66,7 @@ fun TrackDetailScreen(
                 containerColor = Color.Transparent
             ) { paddingValues ->
                 Box(modifier = Modifier.fillMaxSize().background(gradientBrush).padding(paddingValues)) {
-                    TrackDetailContent(track = currentState.track, navController = navController)
+                    TrackDetailContent(track = currentState.track, navController = navController, playbackManager = playbackManager) // <-- ¡SE PASA EL GESTOR!
                 }
             }
         }
@@ -76,7 +79,11 @@ fun TrackDetailScreen(
 }
 
 @Composable
-fun TrackDetailContent(track: Track, navController: NavController) {
+fun TrackDetailContent(
+    track: Track,
+    navController: NavController,
+    playbackManager: SpotifyPlaybackManager // <-- ¡SE RECIBE EL GESTOR!
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -103,33 +110,39 @@ fun TrackDetailContent(track: Track, navController: NavController) {
         )
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Artistas (clicables)
         Row {
             track.artists.forEachIndexed { index, artist ->
                 Text(
                     text = artist.name,
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.LightGray,
-                    modifier = Modifier.clickable { // Navega al perfil del artista
-                        navController.navigate(Routes.ArtistDetail.createRoute(artist.id))
-                    }
+                    modifier = Modifier.clickable { navController.navigate(Routes.ArtistDetail.createRoute(artist.id)) }
                 )
                 if (index < track.artists.lastIndex) {
                     Text(text = ", ", style = MaterialTheme.typography.bodyLarge, color = Color.LightGray)
                 }
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(32.dp)) // Aumentado para dar espacio al botón
 
-        // Álbum (clicable) y Duración
+        // --- ¡¡¡BOTÓN DE PLAY!!! ---
+        Button(
+            onClick = { playbackManager.play(track.uri) },
+            shape = CircleShape,
+            modifier = Modifier.size(72.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+        ) {
+            Icon(Icons.Default.PlayArrow, contentDescription = "Reproducir", modifier = Modifier.size(48.dp), tint = Color.Black)
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+
         Column(
             modifier = Modifier.fillMaxWidth(0.8f),
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Row(modifier = Modifier.clickable { // Navega al detalle del álbum
-                navController.navigate(Routes.AlbumDetail.createRoute(track.album.id))
-            }) {
+            Row(modifier = Modifier.clickable { navController.navigate(Routes.AlbumDetail.createRoute(track.album.id)) }) {
                 Text(
                     text = "Álbum: ",
                     style = MaterialTheme.typography.bodyMedium,
@@ -159,7 +172,6 @@ fun TrackDetailContent(track: Track, navController: NavController) {
     }
 }
 
-// Función para formatear la duración de milisegundos a "m:ss"
 private fun formatDuration(ms: Int): String {
     val minutes = TimeUnit.MILLISECONDS.toMinutes(ms.toLong())
     val seconds = TimeUnit.MILLISECONDS.toSeconds(ms.toLong()) - TimeUnit.MINUTES.toSeconds(minutes)

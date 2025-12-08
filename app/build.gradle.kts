@@ -1,8 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    // Kapt is now removed
-    // alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.dagger.hilt.android)
@@ -44,6 +42,9 @@ android {
 }
 
 dependencies {
+    // --- ¡¡¡SDK DE SPOTIFY AÑADIDO!!! ---
+    implementation(files("libs/spotify-app-remote-release-0.8.0.aar"))
+
     // Splash Screen API
     implementation("androidx.core:core-splashscreen:1.0.1")
 

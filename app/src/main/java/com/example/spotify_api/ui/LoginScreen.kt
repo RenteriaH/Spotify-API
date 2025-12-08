@@ -21,15 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.spotify_api.model.AuthState
 import com.example.spotify_api.navigation.Routes
-import com.example.spotify_api.viewModel.AuthState
 import com.example.spotify_api.viewModel.LoginViewModel
 
-/**
- * Composable que representa la pantalla de inicio de sesión.
- * Utiliza un WebView para mostrar la página de autorización de Spotify.
- * Intercepta la URL de callback para evitar la pantalla de error "Página web no disponible".
- */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun LoginScreen(navController: NavController, loginViewModel: LoginViewModel = hiltViewModel()) {
@@ -38,7 +33,7 @@ fun LoginScreen(navController: NavController, loginViewModel: LoginViewModel = h
 
     LaunchedEffect(authState) {
         if (authState is AuthState.Authenticated) {
-            navController.navigate(Routes.Main.route) {
+            navController.navigate(Routes.Home.route) {
                 popUpTo(Routes.Login.route) { inclusive = true }
             }
         }
@@ -59,23 +54,14 @@ fun LoginScreen(navController: NavController, loginViewModel: LoginViewModel = h
                         settings.domStorageEnabled = true
 
                         webViewClient = object : WebViewClient() {
-                            /**
-                             * Intercepta la carga de la URL antes de que se muestre.
-                             * Esta es la solución para evitar la pantalla de error net::ERR_UNKNOWN_URL_SCHEME.
-                             */
                             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                                 val url = request?.url.toString()
                                 if (url.startsWith("spotify-api-app://callback")) {
-                                    // Ocultamos la WebView para una transición más limpia
                                     webViewVisible = false
-                                    // Extraemos el código de autorización de la URL
                                     val code = url.substringAfter("code=").substringBefore("&")
-                                    // Le pasamos el código al ViewModel para que lo intercambie por un token
                                     loginViewModel.handleAuthCode(code)
-                                    // Devolvemos 'true' para indicarle a la WebView que hemos manejado la URL y no debe intentar cargarla.
                                     return true
                                 }
-                                // Para cualquier otra URL (navegación dentro de spotify.com), dejamos que la WebView la cargue.
                                 return false
                             }
                         }
@@ -85,7 +71,6 @@ fun LoginScreen(navController: NavController, loginViewModel: LoginViewModel = h
             )
         }
 
-        // Se muestra un indicador de carga mientras se intercambia el código por el token.
         if (authState is AuthState.Loading || !webViewVisible) {
             CircularProgressIndicator()
         }

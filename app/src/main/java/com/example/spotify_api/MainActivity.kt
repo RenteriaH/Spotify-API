@@ -6,29 +6,36 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.spotify_api.navigation.NavManager
+import com.example.spotify_api.playback.SpotifyPlaybackManager
 import com.example.spotify_api.ui.theme.SpotifyAPITheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
-/**
- * La actividad principal y único punto de entrada de la aplicación.
- * Está anotada con @AndroidEntryPoint para habilitar la inyección de dependencias de Hilt.
- */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var playbackManager: SpotifyPlaybackManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        // ¡Limpio y correcto! Solo instalamos el Splash Screen.
-        // Se mostrará durante el tiempo real que tarde la app en arrancar.
         installSplashScreen()
-
         super.onCreate(savedInstanceState)
-
-        enableEdgeToEdge() // Habilita el modo de pantalla completa de borde a borde.
+        enableEdgeToEdge()
         setContent {
-            // Se aplica el tema de la aplicación definido en ui.theme.
             SpotifyAPITheme {
-                // Se llama al NavManager, que se encargará de toda la lógica de navegación.
-                NavManager()
+                // ¡Se pasa el gestor de reproducción al NavManager!
+                NavManager(playbackManager = playbackManager)
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        playbackManager.connect()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        playbackManager.disconnect()
     }
 }

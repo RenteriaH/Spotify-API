@@ -19,10 +19,15 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.spotify_api.navigation.BottomBarScreen
-import com.example.spotify_api.navigation.NavGraph
+import com.example.spotify_api.screens.LibraryScreen
+import com.example.spotify_api.screens.ProfileScreen
+import com.example.spotify_api.ui.HomeScreen
+import com.example.spotify_api.ui.SearchScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,8 +59,7 @@ fun BottomBar(navController: NavHostController) {
     val currentDestination = navBackStackEntry?.destination
 
     NavigationBar(
-        // --- ¡CAMBIO AQUÍ! ---
-        modifier = Modifier.height(80.dp), // Reducimos la altura de la barra
+        modifier = Modifier.height(80.dp),
         containerColor = Color.Black.copy(alpha = 0.8f)
     ) {
         screens.forEach { screen ->
@@ -81,5 +85,15 @@ fun BottomBar(navController: NavHostController) {
                 )
             )
         }
+    }
+}
+
+@Composable
+fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
+    NavHost(navController, startDestination = BottomBarScreen.Home.route, modifier = modifier) {
+        composable(BottomBarScreen.Home.route) { HomeScreen(navController = navController) }
+        composable(BottomBarScreen.Search.route) { SearchScreen(navController = navController) }
+        composable(BottomBarScreen.Library.route) { LibraryScreen(navController = navController) }
+        composable(BottomBarScreen.Profile.route) { ProfileScreen(navController = navController) }
     }
 }
